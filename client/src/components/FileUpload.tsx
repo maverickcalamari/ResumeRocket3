@@ -112,7 +112,12 @@ export default function FileUpload({ onResumeUploaded }: FileUploadProps) {
     <>
       <Card className="card-professional transition-all duration-300">
         <CardContent className="p-8">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Upload Your Resume</h2>
+          <div className="text-center mb-6">
+            <h2 className="text-2xl font-bold bg-gradient-to-r from-gray-900 to-blue-600 bg-clip-text text-transparent mb-2">
+              Upload Your Resume
+            </h2>
+            <p className="text-gray-600">Get instant AI-powered analysis and optimization suggestions</p>
+          </div>
           
           {/* Industry Selection */}
           <div className="mb-6">
@@ -139,29 +144,29 @@ export default function FileUpload({ onResumeUploaded }: FileUploadProps) {
           {/* Drag & Drop Zone */}
           <div
             {...getRootProps()}
-            className={`border-2 border-dashed rounded-lg p-8 text-center transition-all duration-200 cursor-pointer ${
+            className={`border-2 border-dashed rounded-xl p-12 text-center transition-all duration-300 cursor-pointer group ${
               isDragActive
-                ? 'border-primary bg-blue-50'
-                : 'border-gray-300 hover:border-primary hover:bg-blue-50'
+                ? 'border-primary bg-gradient-to-br from-blue-50 to-indigo-50 scale-105'
+                : 'border-gray-300 hover:border-primary hover:bg-gradient-to-br hover:from-blue-50 hover:to-indigo-50 hover:scale-102'
             }`}
           >
             <input {...getInputProps()} />
-            <div className="space-y-4">
-              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto">
-                <CloudUpload className="text-primary h-8 w-8" />
+            <div className="space-y-6">
+              <div className="w-20 h-20 bg-gradient-to-br from-blue-100 to-purple-100 rounded-full flex items-center justify-center mx-auto group-hover:scale-110 transition-transform duration-300">
+                <CloudUpload className="text-primary h-10 w-10" />
               </div>
               <div>
-                <p className="text-lg font-medium text-gray-900">Drop your resume here</p>
-                <p className="text-gray-500">
-                  or <span className="text-primary font-medium">browse to upload</span>
+                <p className="text-xl font-semibold text-gray-900 mb-2">Drop your resume here</p>
+                <p className="text-gray-600">
+                  or <span className="text-primary font-semibold hover:underline">browse to upload</span>
                 </p>
               </div>
-              <div className="flex justify-center space-x-4 text-sm text-gray-500">
-                <span className="flex items-center space-x-1">
+              <div className="flex justify-center space-x-6 text-sm text-gray-500">
+                <span className="flex items-center space-x-2 bg-white rounded-full px-4 py-2 shadow-sm">
                   <FileText className="h-4 w-4 text-red-500" />
                   <span>PDF</span>
                 </span>
-                <span className="flex items-center space-x-1">
+                <span className="flex items-center space-x-2 bg-white rounded-full px-4 py-2 shadow-sm">
                   <File className="h-4 w-4 text-blue-600" />
                   <span>DOC/DOCX</span>
                 </span>

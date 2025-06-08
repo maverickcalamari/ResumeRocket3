@@ -45,16 +45,21 @@ export default function AnalysisResults({ resume, onEdit }: AnalysisResultsProps
   };
 
   return (
-    <Card className="shadow-sm border border-gray-200">
-      <CardContent className="p-6">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-semibold text-gray-900">Analysis Results</h2>
-          <div className="flex space-x-2">
-            <Button variant="outline" onClick={onEdit}>
+    <Card className="card-professional transition-all duration-300">
+      <CardContent className="p-8">
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h2 className="text-2xl font-bold bg-gradient-to-r from-gray-900 to-blue-600 bg-clip-text text-transparent">
+              Analysis Results
+            </h2>
+            <p className="text-gray-600 mt-1">AI-powered insights and recommendations</p>
+          </div>
+          <div className="flex space-x-3">
+            <Button variant="outline" onClick={onEdit} className="btn-professional">
               <Edit className="h-4 w-4 mr-2" />
               Edit Resume
             </Button>
-            <Button className="bg-green-600 hover:bg-green-700">
+            <Button className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 btn-professional">
               <Download className="h-4 w-4 mr-2" />
               Download Optimized
             </Button>
@@ -62,18 +67,36 @@ export default function AnalysisResults({ resume, onEdit }: AnalysisResultsProps
         </div>
 
         {/* ATS Score */}
-        <div className="mb-6">
-          <div className="flex items-center justify-between mb-2">
-            <span className="font-medium text-gray-900">ATS Compatibility Score</span>
-            <span className={`text-2xl font-bold ${getScoreColor(atsScore)}`}>
-              {atsScore}%
-            </span>
+        <div className="mb-8">
+          <div className="bg-gradient-to-r from-gray-50 to-blue-50 rounded-xl p-6 border border-gray-200">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <span className="text-lg font-semibold text-gray-900">ATS Compatibility Score</span>
+                <p className="text-sm text-gray-600 mt-1">Applicant Tracking System optimization level</p>
+              </div>
+              <div className="text-right">
+                <span className={`text-4xl font-bold ${getScoreColor(atsScore)}`}>
+                  {atsScore}%
+                </span>
+                <div className={`text-xs font-medium mt-1 px-3 py-1 rounded-full inline-block ml-2 ${
+                  atsScore >= 80 ? 'bg-green-100 text-green-800' : 
+                  atsScore >= 60 ? 'bg-yellow-100 text-yellow-800' : 
+                  'bg-red-100 text-red-800'
+                }`}>
+                  {atsScore >= 80 ? 'Excellent' : atsScore >= 60 ? 'Good' : 'Needs Work'}
+                </div>
+              </div>
+            </div>
+            <Progress value={atsScore} className="h-4 mb-3" />
+            <p className="text-sm text-gray-700 leading-relaxed">
+              {atsScore >= 80 
+                ? 'Outstanding! Your resume is excellently optimized for ATS systems and should pass through most applicant tracking filters.' 
+                : atsScore >= 60 
+                ? 'Good progress! Your resume has solid ATS compatibility but could benefit from some optimization.' 
+                : 'Significant improvements needed. Your resume may struggle with ATS systems and requires optimization to improve visibility.'
+              }
+            </p>
           </div>
-          <Progress value={atsScore} className="h-3" />
-          <p className="text-sm text-gray-600 mt-2">
-            {atsScore >= 80 ? 'Excellent!' : atsScore >= 60 ? 'Good!' : 'Needs improvement'} 
-            {' '}Your resume is {atsScore >= 80 ? 'well-' : atsScore >= 60 ? 'moderately ' : 'poorly '}optimized for ATS systems.
-          </p>
         </div>
 
         {/* Detailed Scores */}

@@ -62,9 +62,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         interviews: 0,
       };
       
-      const newResumeCount = currentStats.resumesAnalyzed + 1;
+      const newResumeCount = (currentStats.resumesAnalyzed || 0) + 1;
       const newAvgScore = Math.round(
-        ((currentStats.avgScore * currentStats.resumesAnalyzed) + analysis.score) / newResumeCount
+        (((currentStats.avgScore || 0) * (currentStats.resumesAnalyzed || 0)) + analysis.score) / newResumeCount
       );
       
       await storage.updateUserStats(1, {

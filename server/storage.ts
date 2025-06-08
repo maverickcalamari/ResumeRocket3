@@ -72,8 +72,15 @@ export class MemStorage implements IStorage {
   async createResume(insertResume: InsertResume): Promise<Resume> {
     const id = this.currentResumeId++;
     const resume: Resume = { 
-      ...insertResume, 
       id,
+      userId: insertResume.userId || null,
+      filename: insertResume.filename,
+      originalContent: insertResume.originalContent,
+      industry: insertResume.industry,
+      atsScore: insertResume.atsScore || null,
+      analysis: insertResume.analysis || null,
+      suggestions: insertResume.suggestions || null,
+      skillsGap: insertResume.skillsGap || null,
       createdAt: new Date()
     };
     this.resumes.set(id, resume);

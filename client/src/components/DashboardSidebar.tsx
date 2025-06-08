@@ -50,7 +50,7 @@ export default function DashboardSidebar({ stats, resumes }: DashboardSidebarPro
   return (
     <div className="space-y-6">
       {/* Quick Stats */}
-      <Card className="shadow-sm border border-gray-200">
+      <Card className="card-professional transition-all duration-300">
         <CardContent className="p-6">
           <h3 className="font-semibold text-gray-900 mb-4">Your Progress</h3>
           <div className="space-y-4">
@@ -77,12 +77,12 @@ export default function DashboardSidebar({ stats, resumes }: DashboardSidebarPro
       </Card>
 
       {/* Industry Targeting */}
-      <Card className="shadow-sm border border-gray-200">
+      <Card className="card-professional transition-all duration-300">
         <CardContent className="p-6">
-          <h3 className="font-semibold text-gray-900 mb-4">Target Industry</h3>
-          <div className="space-y-3">
+          <h3 className="font-semibold text-gray-900 mb-4 text-center">Target Industry</h3>
+          <div className="space-y-4">
             <Select defaultValue="technology">
-              <SelectTrigger className="w-full">
+              <SelectTrigger className="w-full h-12 text-base">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -93,48 +93,50 @@ export default function DashboardSidebar({ stats, resumes }: DashboardSidebarPro
                 <SelectItem value="education">Education</SelectItem>
               </SelectContent>
             </Select>
-            <p className="text-sm text-gray-600">
-              AI recommendations will be tailored to your selected industry.
-            </p>
+            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-3 border border-blue-200">
+              <p className="text-sm text-blue-800 text-center">
+                AI recommendations are tailored to your selected industry for maximum impact.
+              </p>
+            </div>
           </div>
         </CardContent>
       </Card>
 
       {/* Skills Gap Analysis */}
-      <Card className="shadow-sm border border-gray-200">
+      <Card className="card-professional transition-all duration-300">
         <CardContent className="p-6">
-          <h3 className="font-semibold text-gray-900 mb-4">Skills Gap Analysis</h3>
-          <div className="space-y-3">
+          <h3 className="font-semibold text-gray-900 mb-4 text-center">Skills Assessment</h3>
+          <div className="space-y-4">
             {mockSkills.map((skill) => (
-              <div key={skill.name} className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">{skill.name}</span>
-                <div className="flex items-center space-x-2">
-                  <Progress value={skill.level} className="w-20 h-2" />
-                  <span className="text-xs text-gray-500 w-8">{skill.level}%</span>
+              <div key={skill.name} className="bg-gray-50 rounded-lg p-3 border border-gray-100">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-medium text-gray-700">{skill.name}</span>
+                  <span className="text-xs font-bold text-gray-600">{skill.level}%</span>
                 </div>
+                <Progress value={skill.level} className="h-2" />
               </div>
             ))}
           </div>
-          <Button className="w-full mt-4" variant="outline">
-            View Learning Resources
+          <Button className="w-full mt-4 btn-professional bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
+            Improve Skills
           </Button>
         </CardContent>
       </Card>
 
       {/* Recent Activity */}
-      <Card className="shadow-sm border border-gray-200">
+      <Card className="card-professional transition-all duration-300">
         <CardContent className="p-6">
-          <h3 className="font-semibold text-gray-900 mb-4">Recent Activity</h3>
-          <div className="space-y-3">
+          <h3 className="font-semibold text-gray-900 mb-4 text-center">Recent Activity</h3>
+          <div className="space-y-4">
             {mockActivities.map((activity) => (
-              <div key={activity.id} className="flex items-start space-x-3">
-                <div className={`w-2 h-2 rounded-full mt-2 flex-shrink-0 ${
-                  activity.type === 'success' ? 'bg-green-600' : 
-                  activity.type === 'info' ? 'bg-blue-600' : 'bg-yellow-600'
+              <div key={activity.id} className="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg border border-gray-100">
+                <div className={`w-3 h-3 rounded-full mt-1.5 flex-shrink-0 ${
+                  activity.type === 'success' ? 'bg-green-500' : 
+                  activity.type === 'info' ? 'bg-blue-500' : 'bg-yellow-500'
                 }`} />
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm text-gray-900">{activity.description}</p>
-                  <p className="text-xs text-gray-500">{activity.time}</p>
+                  <p className="text-sm font-medium text-gray-900">{activity.description}</p>
+                  <p className="text-xs text-gray-500 mt-1">{activity.time}</p>
                 </div>
               </div>
             ))}
