@@ -47,19 +47,19 @@ export default function AnalysisResults({ resume, onEdit }: AnalysisResultsProps
   return (
     <Card className="card-professional transition-all duration-300">
       <CardContent className="p-8">
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8 space-y-4 sm:space-y-0">
           <div>
-            <h2 className="text-2xl font-bold bg-gradient-to-r from-gray-900 to-blue-600 bg-clip-text text-transparent">
+            <h2 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-gray-900 to-blue-600 bg-clip-text text-transparent">
               Analysis Results
             </h2>
-            <p className="text-gray-600 mt-1">AI-powered insights and recommendations</p>
+            <p className="text-gray-600 mt-1 text-sm sm:text-base">AI-powered insights and recommendations</p>
           </div>
-          <div className="flex space-x-3">
-            <Button variant="outline" onClick={onEdit} className="btn-professional">
+          <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3">
+            <Button variant="outline" onClick={onEdit} className="btn-professional text-sm sm:text-base">
               <Edit className="h-4 w-4 mr-2" />
               Edit Resume
             </Button>
-            <Button className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 btn-professional">
+            <Button className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 btn-professional text-sm sm:text-base">
               <Download className="h-4 w-4 mr-2" />
               Download Optimized
             </Button>
@@ -100,18 +100,18 @@ export default function AnalysisResults({ resume, onEdit }: AnalysisResultsProps
         </div>
 
         {/* Detailed Scores */}
-        <div className="grid grid-cols-3 gap-4 mb-6">
-          <div className="text-center p-3 bg-gray-50 rounded-lg">
-            <div className="text-2xl font-bold text-gray-900">{analysis.keywordMatch}%</div>
-            <div className="text-sm text-gray-600">Keywords</div>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+          <div className="text-center p-4 sm:p-3 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl border border-blue-200">
+            <div className="text-2xl sm:text-xl lg:text-2xl font-bold text-gray-900">{analysis.keywordMatch}%</div>
+            <div className="text-sm text-gray-600 mt-1">Keywords</div>
           </div>
-          <div className="text-center p-3 bg-gray-50 rounded-lg">
-            <div className="text-2xl font-bold text-gray-900">{analysis.formatting}%</div>
-            <div className="text-sm text-gray-600">Formatting</div>
+          <div className="text-center p-4 sm:p-3 bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl border border-green-200">
+            <div className="text-2xl sm:text-xl lg:text-2xl font-bold text-gray-900">{analysis.formatting}%</div>
+            <div className="text-sm text-gray-600 mt-1">Formatting</div>
           </div>
-          <div className="text-center p-3 bg-gray-50 rounded-lg">
-            <div className="text-2xl font-bold text-gray-900">{analysis.content}%</div>
-            <div className="text-sm text-gray-600">Content</div>
+          <div className="text-center p-4 sm:p-3 bg-gradient-to-br from-purple-50 to-violet-50 rounded-xl border border-purple-200">
+            <div className="text-2xl sm:text-xl lg:text-2xl font-bold text-gray-900">{analysis.content}%</div>
+            <div className="text-sm text-gray-600 mt-1">Content</div>
           </div>
         </div>
 

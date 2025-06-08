@@ -121,11 +121,11 @@ export default function FileUpload({ onResumeUploaded }: FileUploadProps) {
           
           {/* Industry Selection */}
           <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 mb-3">
               Target Industry
             </label>
             <Select value={selectedIndustry} onValueChange={setSelectedIndustry}>
-              <SelectTrigger className="w-full">
+              <SelectTrigger className="w-full h-12 text-base border-2 border-gray-200 hover:border-primary focus:border-primary transition-colors">
                 <SelectValue placeholder="Select your target industry" />
               </SelectTrigger>
               <SelectContent>

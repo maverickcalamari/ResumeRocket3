@@ -40,21 +40,21 @@ export default function Dashboard() {
       {/* Navigation Header */}
       <nav className="gradient-hero shadow-lg border-b border-primary/20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-20">
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-4">
+          <div className="flex justify-between items-center h-16 sm:h-20">
+            <div className="flex items-center space-x-2 sm:space-x-4">
+              <div className="flex items-center space-x-2 sm:space-x-4">
                 <img 
                   src={pierlineLogoPath} 
                   alt="Pierline Consultation" 
-                  className="h-16 w-16 object-contain filter brightness-0 invert"
+                  className="h-10 w-10 sm:h-16 sm:w-16 object-contain filter brightness-0 invert"
                 />
                 <div className="flex flex-col">
-                  <span className="text-2xl font-bold text-white">Pierline Consultation</span>
-                  <span className="text-sm text-white/80 font-medium">Resume Optimization Services</span>
+                  <span className="text-lg sm:text-2xl font-bold text-white">Pierline Consultation</span>
+                  <span className="text-xs sm:text-sm text-white/80 font-medium">Resume Optimization Services</span>
                 </div>
               </div>
             </div>
-            <div className="flex items-center space-x-4">
+            <div className="hidden md:flex items-center space-x-4">
               <Button variant="ghost" size="sm" className="text-white hover:bg-white/20 hover:text-white">
                 Dashboard
               </Button>
@@ -65,6 +65,11 @@ export default function Dashboard() {
                 Get Premium
               </Button>
             </div>
+            <div className="md:hidden">
+              <Button size="sm" className="bg-white text-primary hover:bg-white/90 btn-professional font-semibold">
+                Premium
+              </Button>
+            </div>
           </div>
         </div>
       </nav>
@@ -72,16 +77,16 @@ export default function Dashboard() {
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header Section */}
-        <div className="mb-12">
-          <div className="text-center max-w-4xl mx-auto">
-            <h1 className="text-5xl font-bold bg-gradient-to-r from-gray-900 via-blue-800 to-purple-800 bg-clip-text text-transparent mb-6">
+        <div className="mb-8 sm:mb-12">
+          <div className="text-center max-w-4xl mx-auto px-2">
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold bg-gradient-to-r from-gray-900 via-blue-800 to-purple-800 bg-clip-text text-transparent mb-4 sm:mb-6">
               AI-Powered Resume Optimization
             </h1>
-            <p className="text-xl text-gray-600 leading-relaxed mb-8">
+            <p className="text-base sm:text-lg lg:text-xl text-gray-600 leading-relaxed mb-6 sm:mb-8 px-4">
               Transform your career prospects with our advanced AI technology. Get instant ATS compatibility analysis, 
               industry-specific optimization suggestions, and professional formatting recommendations.
             </p>
-            <div className="flex justify-center space-x-8 text-sm text-gray-500">
+            <div className="flex flex-wrap justify-center gap-4 sm:gap-8 text-xs sm:text-sm text-gray-500">
               <div className="flex items-center space-x-2">
                 <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                 <span>ATS Optimized</span>
@@ -99,9 +104,9 @@ export default function Dashboard() {
         </div>
 
         {/* Main Grid Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 lg:gap-8">
           {/* Left Column - Upload & Analysis */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="xl:col-span-2 space-y-6">
             <FileUpload onResumeUploaded={handleResumeUploaded} />
             
             {currentResume && (
@@ -120,7 +125,9 @@ export default function Dashboard() {
           </div>
 
           {/* Right Column - Dashboard & Stats */}
-          <DashboardSidebar stats={stats} resumes={resumes} />
+          <div className="xl:col-span-1">
+            <DashboardSidebar stats={stats} resumes={resumes} />
+          </div>
         </div>
       </div>
     </div>
