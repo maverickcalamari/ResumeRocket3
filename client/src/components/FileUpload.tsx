@@ -110,8 +110,8 @@ export default function FileUpload({ onResumeUploaded }: FileUploadProps) {
 
   return (
     <>
-      <Card className="shadow-sm border border-gray-200">
-        <CardContent className="p-6">
+      <Card className="card-professional transition-all duration-300">
+        <CardContent className="p-8">
           <h2 className="text-xl font-semibold text-gray-900 mb-4">Upload Your Resume</h2>
           
           {/* Industry Selection */}
