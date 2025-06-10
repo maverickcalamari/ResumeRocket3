@@ -4,6 +4,7 @@ import FileUpload from "@/components/FileUpload";
 import AnalysisResults from "@/components/AnalysisResults";
 import ResumeEditor from "@/components/ResumeEditor";
 import DashboardSidebar from "@/components/DashboardSidebar";
+import TemplateGenerator from "@/components/TemplateGenerator";
 import { Button } from "@/components/ui/button";
 import { FileText } from "lucide-react";
 import pierlineLogoPath from "@assets/Black and Grey Clean Modern Minimalist Creative Technology Logo_1749417486921.png";
@@ -22,6 +23,7 @@ interface Resume {
 export default function Dashboard() {
   const [currentResume, setCurrentResume] = useState<Resume | null>(null);
   const [showEditor, setShowEditor] = useState(false);
+  const [showTemplateGenerator, setShowTemplateGenerator] = useState(false);
 
   const { data: stats } = useQuery({
     queryKey: ['/api/stats'],
@@ -108,6 +110,23 @@ export default function Dashboard() {
           {/* Left Column - Upload & Analysis */}
           <div className="xl:col-span-2 space-y-6">
             <FileUpload onResumeUploaded={handleResumeUploaded} />
+            
+            {/* Template Generator Toggle */}
+            {!currentResume && (
+              <div className="text-center">
+                <Button 
+                  variant="outline" 
+                  onClick={() => setShowTemplateGenerator(!showTemplateGenerator)}
+                  className="btn-professional"
+                >
+                  {showTemplateGenerator ? 'Hide Template Generator' : 'Generate Resume Template'}
+                </Button>
+              </div>
+            )}
+            
+            {showTemplateGenerator && !currentResume && (
+              <TemplateGenerator />
+            )}
             
             {currentResume && (
               <AnalysisResults 
