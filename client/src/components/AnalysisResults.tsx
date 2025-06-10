@@ -2,7 +2,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { CheckCircle, AlertTriangle, Download, Edit } from "lucide-react";
+import { CheckCircle, AlertTriangle, Download, Edit, Calendar, Clock } from "lucide-react";
 
 interface AnalysisResultsProps {
   resume: {
@@ -16,6 +16,13 @@ interface AnalysisResultsProps {
       keywordMatch: number;
       formatting: number;
       content: number;
+      employmentGaps?: Array<{
+        startDate: string;
+        endDate: string;
+        duration: number;
+        severity: 'minor' | 'moderate' | 'significant';
+        recommendations: string[];
+      }>;
     };
     suggestions: Array<{
       id: number;

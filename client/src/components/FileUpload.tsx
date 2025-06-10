@@ -137,6 +137,10 @@ export default function FileUpload({ onResumeUploaded }: FileUploadProps) {
                 <SelectItem value="consulting">Consulting</SelectItem>
                 <SelectItem value="sales">Sales</SelectItem>
                 <SelectItem value="operations">Operations</SelectItem>
+                <SelectItem value="engineering">Engineering</SelectItem>
+                <SelectItem value="data_science">Data Science</SelectItem>
+                <SelectItem value="legal">Legal</SelectItem>
+                <SelectItem value="human_resources">Human Resources</SelectItem>
               </SelectContent>
             </Select>
           </div>
