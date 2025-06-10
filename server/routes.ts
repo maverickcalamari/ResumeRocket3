@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { analyzeResume } from "./openai";
+import { analyzeResume, generateResumeTemplate } from "./openai";
 import { insertResumeSchema } from "@shared/schema";
 import multer from "multer";
 import { z } from "zod";
@@ -159,6 +159,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Update resume error:', error);
       res.status(500).json({ message: 'Failed to update resume' });
+    }
+  });
+
+  // Generate resume template
+  app.post('/api/templates/generate', async (req, res) => {
+    try {
+      const { industry } = req.body;
+      
+      if (!industry) {
+        return res.status(400).json({ message: 'Industry is required' });
+      }
+      
+      const template = await generateResumeTemplate(industry);
+      res.json(template);
+    } catch (error) {
+      console.error('Template generation error:', error);
+      res.status(500).json({ message: 'Failed to generate template' });
     }
   });
 

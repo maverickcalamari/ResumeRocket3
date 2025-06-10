@@ -261,7 +261,7 @@ function generateFallbackAnalysis(resumeContent: string, industry: string): AIAn
       hasContact ? "Contact information present" : "Basic structure detected",
       hasExperience ? "Work experience included" : "Content organized",
       hasSkills ? "Skills section identified" : "Readable format"
-    ].filter(Boolean),
+    ],
     improvements: [
       !hasContact ? "Add complete contact information" : null,
       !hasExperience ? "Include detailed work experience" : null,
@@ -269,10 +269,11 @@ function generateFallbackAnalysis(resumeContent: string, industry: string): AIAn
       "Add quantified achievements",
       "Include industry-specific keywords",
       "Improve ATS formatting"
-    ].filter(Boolean),
+    ].filter((item): item is string => item !== null),
     keywordMatch: Math.floor(Math.random() * 30) + 40,
     formatting: hasContact && hasExperience ? 75 : 60,
     content: hasExperience && hasSkills ? 70 : 55,
+    employmentGaps: [],
   };
 
   const suggestions: ResumeSuggestion[] = [
@@ -307,6 +308,143 @@ function generateFallbackAnalysis(resumeContent: string, industry: string): AIAn
     analysis,
     suggestions,
     skillsGap,
+  };
+}
+
+// Resume template generation function
+export async function generateResumeTemplate(industry: string): Promise<ResumeTemplate> {
+  const industryKeywords = INDUSTRY_KEYWORDS[industry as keyof typeof INDUSTRY_KEYWORDS] || [];
+  
+  const templatePrompt = `
+Generate a professional resume template optimized for the ${industry} industry. 
+Include industry-specific keywords: ${industryKeywords.slice(0, 20).join(', ')}
+
+Provide a comprehensive template in the following JSON format:
+{
+  "id": "template_${industry}_1",
+  "industry": "${industry}",
+  "name": "Professional ${industry} Resume Template",
+  "description": "ATS-optimized template designed specifically for ${industry} professionals",
+  "sections": [
+    {
+      "name": "Contact Information",
+      "required": true,
+      "order": 1,
+      "content": "Template content with placeholders",
+      "tips": ["Tip 1", "Tip 2"]
+    }
+  ],
+  "keywords": ["keyword1", "keyword2"],
+  "formatting": {
+    "font": "Arial or Calibri",
+    "fontSize": "11-12pt",
+    "margins": "0.5-1 inch",
+    "spacing": "1.0-1.15",
+    "bulletStyle": "Simple bullets"
+  }
+}
+
+Create sections for: Contact Information, Professional Summary, Core Competencies, Professional Experience, Education, Certifications (if relevant), and Additional Skills.
+
+Make the template highly specific to ${industry} with relevant keywords, skills, and formatting guidelines.
+`;
+
+  try {
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o",
+      messages: [
+        {
+          role: "system",
+          content: "You are an expert resume writer and career consultant. Create industry-specific resume templates that are ATS-optimized."
+        },
+        {
+          role: "user",
+          content: templatePrompt
+        }
+      ],
+      response_format: { type: "json_object" },
+      temperature: 0.3,
+    });
+
+    const template = JSON.parse(response.choices[0].message.content || '{}');
+    
+    return {
+      id: template.id || `template_${industry}_1`,
+      industry: industry,
+      name: template.name || `${industry} Resume Template`,
+      description: template.description || `Professional template for ${industry}`,
+      sections: Array.isArray(template.sections) ? template.sections : getDefaultSections(industry),
+      keywords: Array.isArray(template.keywords) ? template.keywords : industryKeywords.slice(0, 15),
+      formatting: template.formatting || getDefaultFormatting()
+    };
+
+  } catch (error) {
+    console.error('Template generation error:', error);
+    return getDefaultTemplate(industry);
+  }
+}
+
+function getDefaultSections(industry: string) {
+  return [
+    {
+      name: "Contact Information",
+      required: true,
+      order: 1,
+      content: "[Full Name]\n[Phone Number] | [Email Address] | [City, State] | [LinkedIn Profile]",
+      tips: ["Use a professional email address", "Include LinkedIn profile", "Add location for remote work preferences"]
+    },
+    {
+      name: "Professional Summary",
+      required: true,
+      order: 2,
+      content: "Results-driven [Job Title] with [X] years of experience in [Industry/Field]. Proven track record of [Key Achievement]. Skilled in [Core Skills].",
+      tips: ["Keep to 3-4 lines", "Include quantified achievements", "Tailor to job description"]
+    },
+    {
+      name: "Core Competencies",
+      required: true,
+      order: 3,
+      content: "• [Skill 1] • [Skill 2] • [Skill 3]\n• [Skill 4] • [Skill 5] • [Skill 6]",
+      tips: ["Use industry keywords", "Match skills to job requirements", "Include both technical and soft skills"]
+    },
+    {
+      name: "Professional Experience",
+      required: true,
+      order: 4,
+      content: "[Job Title] | [Company Name] | [Start Date] - [End Date]\n• [Achievement with quantified results]\n• [Responsibility with impact]\n• [Project with outcome]",
+      tips: ["Use action verbs", "Quantify achievements", "Focus on results and impact"]
+    },
+    {
+      name: "Education",
+      required: true,
+      order: 5,
+      content: "[Degree] in [Field] | [University Name] | [Graduation Year]\n[Relevant Coursework, Honors, or GPA if 3.5+]",
+      tips: ["List most recent degree first", "Include relevant coursework", "Add honors or high GPA"]
+    }
+  ];
+}
+
+function getDefaultFormatting() {
+  return {
+    font: "Arial, Calibri, or similar sans-serif",
+    fontSize: "11-12pt for body text, 14-16pt for headers",
+    margins: "0.5-1 inch on all sides",
+    spacing: "1.0-1.15 line spacing",
+    bulletStyle: "Simple round bullets or dashes"
+  };
+}
+
+function getDefaultTemplate(industry: string): ResumeTemplate {
+  const industryKeywords = INDUSTRY_KEYWORDS[industry as keyof typeof INDUSTRY_KEYWORDS] || [];
+  
+  return {
+    id: `template_${industry}_default`,
+    industry: industry,
+    name: `Professional ${industry} Resume Template`,
+    description: `ATS-optimized resume template specifically designed for ${industry} professionals`,
+    sections: getDefaultSections(industry),
+    keywords: industryKeywords.slice(0, 15),
+    formatting: getDefaultFormatting()
   };
 }
 
