@@ -1,5 +1,5 @@
 import OpenAI from "openai";
-import { ResumeAnalysis, ResumeSuggestion, SkillGap } from "@shared/schema";
+import { ResumeAnalysis, ResumeSuggestion, SkillGap, EmploymentGap, ResumeTemplate } from "@shared/schema";
 
 // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
 const openai = new OpenAI({ 
@@ -15,44 +15,76 @@ interface AIAnalysisResult {
 
 const INDUSTRY_KEYWORDS = {
   technology: [
-    'JavaScript', 'Python', 'React', 'Node.js', 'AWS', 'Docker', 'Kubernetes',
-    'API', 'Database', 'Git', 'Agile', 'CI/CD', 'Machine Learning', 'Data Analysis',
-    'Software Development', 'Full Stack', 'Frontend', 'Backend', 'DevOps'
+    'JavaScript', 'Python', 'React', 'Node.js', 'AWS', 'Docker', 'Kubernetes', 'SQL', 'NoSQL', 'API',
+    'Machine Learning', 'AI', 'Cloud Computing', 'DevOps', 'Agile', 'Scrum', 'Git', 'CI/CD',
+    'Microservices', 'GraphQL', 'TypeScript', 'Vue.js', 'Angular', 'MongoDB', 'PostgreSQL',
+    'Redis', 'Elasticsearch', 'TensorFlow', 'PyTorch', 'Blockchain', 'Cybersecurity'
   ],
   healthcare: [
-    'Patient Care', 'Medical Records', 'HIPAA', 'Clinical', 'Healthcare',
-    'Medical', 'Nursing', 'Pharmacy', 'Laboratory', 'Diagnostic', 'Treatment',
-    'EMR', 'EHR', 'Healthcare Administration', 'Medical Device', 'FDA'
+    'Patient Care', 'HIPAA', 'Electronic Health Records', 'Medical Terminology', 'Clinical Research',
+    'Healthcare Administration', 'Medical Coding', 'ICD-10', 'CPT', 'Epic', 'Cerner', 'FHIR',
+    'Telemedicine', 'Healthcare Quality', 'Regulatory Compliance', 'Medical Device', 'Pharmacology',
+    'Nursing', 'Physical Therapy', 'Radiology', 'Laboratory', 'Healthcare Analytics'
   ],
   finance: [
-    'Financial Analysis', 'Risk Management', 'Investment', 'Portfolio',
-    'Banking', 'Accounting', 'Budgeting', 'Forecasting', 'Compliance',
-    'Audit', 'Financial Reporting', 'Excel', 'Bloomberg', 'Trading', 'Securities'
+    'Financial Analysis', 'Risk Management', 'Investment Banking', 'Portfolio Management', 'Trading',
+    'Bloomberg Terminal', 'Financial Modeling', 'Excel', 'SQL', 'Python', 'R', 'GAAP', 'IFRS',
+    'Compliance', 'Anti-Money Laundering', 'KYC', 'Credit Analysis', 'Derivatives', 'Fixed Income',
+    'Equity Research', 'Valuation', 'Mergers & Acquisitions', 'Private Equity', 'Hedge Funds'
   ],
   marketing: [
-    'Digital Marketing', 'SEO', 'SEM', 'Social Media', 'Content Marketing',
-    'Brand Management', 'Campaign', 'Analytics', 'Lead Generation', 'CRM',
-    'Email Marketing', 'Conversion', 'ROI', 'Market Research', 'Advertising'
+    'Digital Marketing', 'SEO', 'SEM', 'Social Media Marketing', 'Content Marketing', 'Email Marketing',
+    'Google Analytics', 'Google Ads', 'Facebook Ads', 'LinkedIn Ads', 'Marketing Automation',
+    'CRM', 'Salesforce', 'HubSpot', 'A/B Testing', 'Conversion Optimization', 'Brand Management',
+    'Market Research', 'Customer Segmentation', 'Lead Generation', 'Marketing Strategy'
   ],
   education: [
-    'Curriculum', 'Teaching', 'Learning', 'Assessment', 'Education',
-    'Instruction', 'Classroom Management', 'Pedagogy', 'Student Development',
-    'Academic', 'Training', 'Workshop', 'Professional Development', 'Research'
+    'Curriculum Development', 'Instructional Design', 'Learning Management Systems', 'Blackboard',
+    'Canvas', 'Moodle', 'Educational Technology', 'Student Assessment', 'Differentiated Instruction',
+    'Classroom Management', 'Special Education', 'ESL', 'Common Core', 'IEP', '504 Plans',
+    'Professional Development', 'Data-Driven Instruction', 'Educational Research', 'Online Learning'
   ],
   consulting: [
-    'Strategy', 'Analysis', 'Problem Solving', 'Client Management', 'Project Management',
-    'Business Development', 'Process Improvement', 'Change Management',
-    'Stakeholder', 'Presentation', 'Consulting', 'Advisory', 'Implementation'
+    'Strategy Consulting', 'Management Consulting', 'Business Analysis', 'Process Improvement',
+    'Change Management', 'Project Management', 'Stakeholder Management', 'Data Analysis',
+    'PowerPoint', 'Excel', 'Tableau', 'SQL', 'Problem Solving', 'Client Relations',
+    'Industry Analysis', 'Competitive Analysis', 'Due Diligence', 'Operational Excellence'
   ],
   sales: [
-    'Sales', 'Revenue', 'Pipeline', 'Prospecting', 'Lead Generation', 'CRM',
-    'Account Management', 'Customer Relationship', 'Negotiation', 'Closing',
-    'Territory', 'Quota', 'B2B', 'B2C', 'Sales Process', 'Customer Success'
+    'Sales Strategy', 'Lead Generation', 'Prospecting', 'Cold Calling', 'CRM', 'Salesforce',
+    'Account Management', 'Customer Relationship Management', 'Sales Forecasting', 'Territory Management',
+    'B2B Sales', 'B2C Sales', 'Inside Sales', 'Outside Sales', 'Sales Enablement', 'Negotiation',
+    'Closing Techniques', 'Pipeline Management', 'Sales Analytics', 'Customer Success'
   ],
   operations: [
-    'Operations', 'Process Improvement', 'Supply Chain', 'Logistics',
-    'Quality Control', 'Inventory Management', 'Procurement', 'Vendor Management',
-    'Efficiency', 'Cost Reduction', 'Lean', 'Six Sigma', 'Project Management'
+    'Supply Chain Management', 'Logistics', 'Inventory Management', 'Process Optimization',
+    'Lean Manufacturing', 'Six Sigma', 'Quality Control', 'Vendor Management', 'Cost Reduction',
+    'ERP Systems', 'SAP', 'Oracle', 'Operations Research', 'Data Analysis', 'KPI Management',
+    'Continuous Improvement', 'Project Management', 'Cross-functional Collaboration'
+  ],
+  engineering: [
+    'CAD', 'SolidWorks', 'AutoCAD', 'MATLAB', 'Simulation', 'Design for Manufacturing', 'DFM',
+    'Product Development', 'Project Management', 'Quality Assurance', 'Testing', 'Prototyping',
+    'Materials Science', 'Mechanical Engineering', 'Electrical Engineering', 'Civil Engineering',
+    'Chemical Engineering', 'Environmental Engineering', 'Safety Engineering', 'Regulatory Compliance'
+  ],
+  data_science: [
+    'Machine Learning', 'Deep Learning', 'Statistical Analysis', 'Data Mining', 'Big Data',
+    'Python', 'R', 'SQL', 'Tableau', 'Power BI', 'Hadoop', 'Spark', 'TensorFlow', 'PyTorch',
+    'Scikit-learn', 'Pandas', 'NumPy', 'Data Visualization', 'Predictive Modeling', 'NLP',
+    'Computer Vision', 'A/B Testing', 'Experimental Design', 'Business Intelligence'
+  ],
+  legal: [
+    'Legal Research', 'Contract Law', 'Litigation', 'Corporate Law', 'Intellectual Property',
+    'Compliance', 'Regulatory Affairs', 'Due Diligence', 'Legal Writing', 'Negotiation',
+    'Case Management', 'Discovery', 'Depositions', 'Trial Preparation', 'Appeals',
+    'Employment Law', 'Real Estate Law', 'Family Law', 'Criminal Law', 'Immigration Law'
+  ],
+  human_resources: [
+    'Talent Acquisition', 'Recruiting', 'HRIS', 'Workday', 'SuccessFactors', 'Performance Management',
+    'Employee Relations', 'Compensation & Benefits', 'Training & Development', 'Diversity & Inclusion',
+    'Employment Law', 'FMLA', 'FLSA', 'EEO', 'HR Analytics', 'Organizational Development',
+    'Change Management', 'Succession Planning', 'Employee Engagement', 'Onboarding'
   ]
 };
 
@@ -62,7 +94,7 @@ export async function analyzeResume(resumeContent: string, industry: string): Pr
     
     const analysisPrompt = `
 You are an expert ATS (Applicant Tracking System) analyzer and career consultant. 
-Analyze the following resume for ATS compatibility and provide optimization suggestions.
+Analyze the following resume for ATS compatibility, employment gaps, and provide optimization suggestions.
 
 Industry Context: ${industry}
 Relevant Keywords: ${industryKeywords.join(', ')}
@@ -78,10 +110,19 @@ Please provide a comprehensive analysis in the following JSON format:
   "content": number (0-100),
   "strengths": string[],
   "improvements": string[],
+  "employmentGaps": [
+    {
+      "startDate": "YYYY-MM" (when gap started),
+      "endDate": "YYYY-MM" (when gap ended),
+      "duration": number (gap duration in months),
+      "severity": "minor" | "moderate" | "significant",
+      "recommendations": string[]
+    }
+  ],
   "suggestions": [
     {
       "id": number,
-      "type": "keywords" | "quantify" | "section" | "formatting",
+      "type": "keywords" | "quantify" | "section" | "formatting" | "employment_gap",
       "title": string,
       "description": string,
       "keywords": string[] (if type is keywords),
@@ -144,6 +185,7 @@ Focus on:
       keywordMatch: Math.min(100, Math.max(0, result.keywordMatch || 0)),
       formatting: Math.min(100, Math.max(0, result.formatting || 0)),
       content: Math.min(100, Math.max(0, result.content || 0)),
+      employmentGaps: Array.isArray(result.employmentGaps) ? result.employmentGaps : [],
     };
 
     const suggestions: ResumeSuggestion[] = Array.isArray(result.suggestions) 

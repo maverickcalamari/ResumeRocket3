@@ -37,11 +37,12 @@ export interface ResumeAnalysis {
   keywordMatch: number;
   formatting: number;
   content: number;
+  employmentGaps?: EmploymentGap[];
 }
 
 export interface ResumeSuggestion {
   id: number;
-  type: 'keywords' | 'quantify' | 'section' | 'formatting';
+  type: 'keywords' | 'quantify' | 'section' | 'formatting' | 'employment_gap' | 'template';
   title: string;
   description: string;
   keywords?: string[];
@@ -53,6 +54,40 @@ export interface SkillGap {
   currentLevel: number;
   targetLevel: number;
   importance: number;
+}
+
+export interface EmploymentGap {
+  startDate: string;
+  endDate: string;
+  duration: number; // in months
+  severity: 'minor' | 'moderate' | 'significant';
+  recommendations: string[];
+}
+
+export interface ResumeTemplate {
+  id: string;
+  industry: string;
+  name: string;
+  description: string;
+  sections: TemplateSection[];
+  keywords: string[];
+  formatting: TemplateFormatting;
+}
+
+export interface TemplateSection {
+  name: string;
+  required: boolean;
+  order: number;
+  content: string;
+  tips: string[];
+}
+
+export interface TemplateFormatting {
+  font: string;
+  fontSize: string;
+  margins: string;
+  spacing: string;
+  bulletStyle: string;
 }
 
 export const insertResumeSchema = createInsertSchema(resumes).omit({
