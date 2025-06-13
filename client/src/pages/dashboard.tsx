@@ -5,8 +5,11 @@ import AnalysisResults from "@/components/AnalysisResults";
 import ResumeEditor from "@/components/ResumeEditor";
 import DashboardSidebar from "@/components/DashboardSidebar";
 import TemplateGenerator from "@/components/TemplateGenerator";
+import ResumeBuilder from "@/components/ResumeBuilder";
+import PremiumModal from "@/components/PremiumModal";
 import { Button } from "@/components/ui/button";
-import { FileText } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { FileText, Upload, Wand2, Crown } from "lucide-react";
 import pierlineLogoPath from "@assets/Black and Grey Clean Modern Minimalist Creative Technology Logo_1749417486921.png";
 
 interface Resume {
@@ -23,7 +26,8 @@ interface Resume {
 export default function Dashboard() {
   const [currentResume, setCurrentResume] = useState<Resume | null>(null);
   const [showEditor, setShowEditor] = useState(false);
-  const [showTemplateGenerator, setShowTemplateGenerator] = useState(false);
+  const [showPremiumModal, setShowPremiumModal] = useState(false);
+  const [activeTab, setActiveTab] = useState("upload");
 
   const { data: stats } = useQuery({
     queryKey: ['/api/stats'],
@@ -35,6 +39,11 @@ export default function Dashboard() {
 
   const handleResumeUploaded = (resume: Resume) => {
     setCurrentResume(resume);
+    setActiveTab("analysis");
+  };
+
+  const handlePremiumClick = () => {
+    setShowPremiumModal(true);
   };
 
   return (
@@ -63,12 +72,22 @@ export default function Dashboard() {
               <Button variant="ghost" size="sm" className="text-white hover:bg-white/20 hover:text-white">
                 Analytics
               </Button>
-              <Button size="sm" className="bg-white text-primary hover:bg-white/90 btn-professional font-semibold">
+              <Button 
+                onClick={handlePremiumClick}
+                size="sm" 
+                className="bg-white text-primary hover:bg-white/90 btn-professional font-semibold"
+              >
+                <Crown className="h-4 w-4 mr-2" />
                 Get Premium
               </Button>
             </div>
             <div className="md:hidden">
-              <Button size="sm" className="bg-white text-primary hover:bg-white/90 btn-professional font-semibold">
+              <Button 
+                onClick={handlePremiumClick}
+                size="sm" 
+                className="bg-white text-primary hover:bg-white/90 btn-professional font-semibold"
+              >
+                <Crown className="h-4 w-4 mr-1" />
                 Premium
               </Button>
             </div>
@@ -107,40 +126,53 @@ export default function Dashboard() {
 
         {/* Main Grid Layout */}
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 lg:gap-8">
-          {/* Left Column - Upload & Analysis */}
+          {/* Left Column - Main Content */}
           <div className="xl:col-span-2 space-y-6">
-            <FileUpload onResumeUploaded={handleResumeUploaded} />
-            
-            {/* Template Generator Toggle */}
-            {!currentResume && (
-              <div className="text-center">
-                <Button 
-                  variant="outline" 
-                  onClick={() => setShowTemplateGenerator(!showTemplateGenerator)}
-                  className="btn-professional"
-                >
-                  {showTemplateGenerator ? 'Hide Template Generator' : 'Generate Resume Template'}
-                </Button>
-              </div>
-            )}
-            
-            {showTemplateGenerator && !currentResume && (
-              <TemplateGenerator />
-            )}
-            
-            {currentResume && (
-              <AnalysisResults 
-                resume={currentResume}
-                onEdit={() => setShowEditor(true)}
-              />
-            )}
-            
-            {showEditor && currentResume && (
-              <ResumeEditor 
-                resume={currentResume}
-                onUpdate={setCurrentResume}
-              />
-            )}
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+              <TabsList className="grid w-full grid-cols-3 mb-6">
+                <TabsTrigger value="upload" className="flex items-center space-x-2">
+                  <Upload className="h-4 w-4" />
+                  <span className="hidden sm:inline">Upload & Analyze</span>
+                  <span className="sm:hidden">Upload</span>
+                </TabsTrigger>
+                <TabsTrigger value="build" className="flex items-center space-x-2">
+                  <FileText className="h-4 w-4" />
+                  <span className="hidden sm:inline">Build Resume</span>
+                  <span className="sm:hidden">Build</span>
+                </TabsTrigger>
+                <TabsTrigger value="templates" className="flex items-center space-x-2">
+                  <Wand2 className="h-4 w-4" />
+                  <span className="hidden sm:inline">Templates</span>
+                  <span className="sm:hidden">Templates</span>
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="upload" className="space-y-6">
+                <FileUpload onResumeUploaded={handleResumeUploaded} />
+                
+                {currentResume && (
+                  <AnalysisResults 
+                    resume={currentResume}
+                    onEdit={() => setShowEditor(true)}
+                  />
+                )}
+                
+                {showEditor && currentResume && (
+                  <ResumeEditor 
+                    resume={currentResume}
+                    onUpdate={setCurrentResume}
+                  />
+                )}
+              </TabsContent>
+
+              <TabsContent value="build" className="space-y-6">
+                <ResumeBuilder />
+              </TabsContent>
+
+              <TabsContent value="templates" className="space-y-6">
+                <TemplateGenerator />
+              </TabsContent>
+            </Tabs>
           </div>
 
           {/* Right Column - Dashboard & Stats */}
@@ -149,6 +181,11 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+
+      <PremiumModal 
+        isOpen={showPremiumModal} 
+        onClose={() => setShowPremiumModal(false)} 
+      />
     </div>
   );
 }

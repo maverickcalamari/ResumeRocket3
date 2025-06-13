@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { analyzeResume, generateResumeTemplate } from "./openai";
+import { analyzeResume, generateResumeTemplate, buildResume } from "./openai";
 import { insertResumeSchema } from "@shared/schema";
 import multer from "multer";
 import { z } from "zod";
@@ -76,6 +76,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Resume upload error:', error);
       res.status(500).json({ message: 'Failed to analyze resume' });
+    }
+  });
+
+  // Build resume from scratch
+  app.post('/api/resumes/build', async (req, res) => {
+    try {
+      const { personalInfo, sections, industry, template } = req.body;
+      
+      if (!personalInfo || !sections || !industry) {
+        return res.status(400).json({ message: 'Missing required fields' });
+      }
+
+      const builtResume = await buildResume(personalInfo, sections, industry, template);
+      
+      // Save the built resume
+      const resumeData = {
+        userId: 1,
+        filename: `${personalInfo.fullName}_Built_Resume.txt`,
+        originalContent: builtResume,
+        industry,
+        atsScore: null,
+        analysis: null,
+        suggestions: null,
+        skillsGap: null,
+      };
+
+      const resume = await storage.createResume(resumeData);
+      
+      res.json({ 
+        content: builtResume,
+        resume: resume
+      });
+    } catch (error) {
+      console.error('Resume build error:', error);
+      res.status(500).json({ message: 'Failed to build resume' });
+    }
+  });
+
+  // Export resume as PDF (placeholder - would need PDF generation library)
+  app.post('/api/resumes/export-pdf', async (req, res) => {
+    try {
+      const { content, personalInfo, template } = req.body;
+      
+      // In a real implementation, you would use a PDF generation library like puppeteer or jsPDF
+      // For now, we'll return an error suggesting the text download
+      res.status(501).json({ 
+        message: 'PDF export not yet implemented. Please use text download.' 
+      });
+    } catch (error) {
+      console.error('PDF export error:', error);
+      res.status(500).json({ message: 'Failed to export PDF' });
     }
   });
 
@@ -176,6 +227,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Template generation error:', error);
       res.status(500).json({ message: 'Failed to generate template' });
+    }
+  });
+
+  // Skills assessment endpoint
+  app.post('/api/skills/assess', async (req, res) => {
+    try {
+      const { skills, industry, userId = 1 } = req.body;
+      
+      // In a real app, you would save the skills assessment to the database
+      // For now, we'll just return a success response
+      
+      res.json({ 
+        message: 'Skills assessment saved successfully',
+        skills: skills,
+        recommendations: [
+          'Focus on improving your weakest skills first',
+          'Consider taking online courses for skill gaps',
+          'Practice with real-world projects',
+          'Get certifications for important skills'
+        ]
+      });
+    } catch (error) {
+      console.error('Skills assessment error:', error);
+      res.status(500).json({ message: 'Failed to save skills assessment' });
     }
   });
 

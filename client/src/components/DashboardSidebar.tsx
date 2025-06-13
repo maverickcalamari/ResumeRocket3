@@ -1,7 +1,12 @@
+import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Progress } from "@/components/ui/progress";
+import { Badge } from "@/components/ui/badge";
+import { Crown, TrendingUp, Calendar, FileText, Award, Target } from "lucide-react";
+import SkillAssessment from "./SkillAssessment";
+import PremiumModal from "./PremiumModal";
 
 interface DashboardSidebarProps {
   stats?: {
@@ -17,6 +22,9 @@ interface DashboardSidebarProps {
 }
 
 export default function DashboardSidebar({ stats, resumes }: DashboardSidebarProps) {
+  const [showSkillAssessment, setShowSkillAssessment] = useState(false);
+  const [showPremiumModal, setShowPremiumModal] = useState(false);
+
   // Mock skills data for demonstration
   const mockSkills = [
     { name: 'JavaScript', level: 90, color: 'bg-green-600' },
@@ -25,27 +33,67 @@ export default function DashboardSidebar({ stats, resumes }: DashboardSidebarPro
     { name: 'AWS', level: 30, color: 'bg-red-600' },
   ];
 
-  // Mock activity data
+  // Enhanced activity data with more realistic entries
   const mockActivities = [
     { 
       id: 1, 
-      description: 'Resume analyzed', 
+      description: 'Resume analyzed for Technology industry', 
       time: '2 hours ago',
-      type: 'success' 
+      type: 'success',
+      icon: <FileText className="h-4 w-4" />
     },
     { 
       id: 2, 
-      description: 'Skills updated for Tech industry', 
+      description: 'Skills assessment completed', 
       time: '1 day ago',
-      type: 'info' 
+      type: 'info',
+      icon: <Award className="h-4 w-4" />
     },
     { 
       id: 3, 
-      description: 'Interview tips generated', 
+      description: 'Interview tips generated for Software Engineer role', 
       time: '3 days ago',
-      type: 'warning' 
+      type: 'warning',
+      icon: <Target className="h-4 w-4" />
+    },
+    { 
+      id: 4, 
+      description: 'Resume template downloaded', 
+      time: '5 days ago',
+      type: 'success',
+      icon: <FileText className="h-4 w-4" />
+    },
+    { 
+      id: 5, 
+      description: 'ATS score improved to 85%', 
+      time: '1 week ago',
+      type: 'success',
+      icon: <TrendingUp className="h-4 w-4" />
     },
   ];
+
+  const handleSkillsImprovement = () => {
+    setShowSkillAssessment(true);
+  };
+
+  const handlePremiumUpgrade = () => {
+    setShowPremiumModal(true);
+  };
+
+  if (showSkillAssessment) {
+    return (
+      <div className="space-y-4 sm:space-y-6">
+        <SkillAssessment onComplete={() => setShowSkillAssessment(false)} />
+        <Button 
+          variant="outline" 
+          onClick={() => setShowSkillAssessment(false)}
+          className="w-full"
+        >
+          Back to Dashboard
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4 sm:space-y-6">
@@ -72,6 +120,28 @@ export default function DashboardSidebar({ stats, resumes }: DashboardSidebarPro
                 {stats?.interviews || 0}
               </span>
             </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Premium Upgrade CTA */}
+      <Card className="card-professional transition-all duration-300 bg-gradient-to-br from-yellow-50 to-orange-50 border-yellow-200">
+        <CardContent className="p-4 sm:p-6">
+          <div className="text-center">
+            <div className="w-12 h-12 bg-gradient-to-br from-yellow-500 to-orange-600 rounded-full flex items-center justify-center mx-auto mb-3">
+              <Crown className="h-6 w-6 text-white" />
+            </div>
+            <h3 className="font-semibold text-gray-900 mb-2 text-base sm:text-lg">Upgrade to Premium</h3>
+            <p className="text-xs sm:text-sm text-gray-600 mb-4">
+              Unlock unlimited analyses, advanced templates, and personal career coaching
+            </p>
+            <Button 
+              onClick={handlePremiumUpgrade}
+              className="w-full btn-professional bg-gradient-to-r from-yellow-600 to-orange-600 hover:from-yellow-700 hover:to-orange-700 text-sm sm:text-base"
+            >
+              <Crown className="h-4 w-4 mr-2" />
+              Get Premium
+            </Button>
           </div>
         </CardContent>
       </Card>
@@ -111,14 +181,20 @@ export default function DashboardSidebar({ stats, resumes }: DashboardSidebarPro
               <div key={skill.name} className="bg-gray-50 rounded-lg p-3 border border-gray-100">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-xs sm:text-sm font-medium text-gray-700">{skill.name}</span>
-                  <span className="text-xs font-bold text-gray-600">{skill.level}%</span>
+                  <Badge variant="outline" className="text-xs">
+                    {skill.level}%
+                  </Badge>
                 </div>
                 <Progress value={skill.level} className="h-2" />
               </div>
             ))}
           </div>
-          <Button className="w-full mt-3 sm:mt-4 btn-professional bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-sm sm:text-base">
-            Improve Skills
+          <Button 
+            onClick={handleSkillsImprovement}
+            className="w-full mt-3 sm:mt-4 btn-professional bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-sm sm:text-base"
+          >
+            <Award className="h-4 w-4 mr-2" />
+            Take Skills Assessment
           </Button>
         </CardContent>
       </Card>
@@ -127,22 +203,39 @@ export default function DashboardSidebar({ stats, resumes }: DashboardSidebarPro
       <Card className="card-professional transition-all duration-300">
         <CardContent className="p-4 sm:p-6">
           <h3 className="font-semibold text-gray-900 mb-3 sm:mb-4 text-center text-base sm:text-lg">Recent Activity</h3>
-          <div className="space-y-3 sm:space-y-4">
+          <div className="space-y-3 sm:space-y-4 max-h-64 overflow-y-auto">
             {mockActivities.map((activity) => (
-              <div key={activity.id} className="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg border border-gray-100">
-                <div className={`w-3 h-3 rounded-full mt-1.5 flex-shrink-0 ${
-                  activity.type === 'success' ? 'bg-green-500' : 
-                  activity.type === 'info' ? 'bg-blue-500' : 'bg-yellow-500'
-                }`} />
+              <div key={activity.id} className="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg border border-gray-100 hover:bg-gray-100 transition-colors">
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                  activity.type === 'success' ? 'bg-green-100 text-green-600' : 
+                  activity.type === 'info' ? 'bg-blue-100 text-blue-600' : 
+                  activity.type === 'warning' ? 'bg-yellow-100 text-yellow-600' :
+                  'bg-gray-100 text-gray-600'
+                }`}>
+                  {activity.icon}
+                </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs sm:text-sm font-medium text-gray-900">{activity.description}</p>
-                  <p className="text-xs text-gray-500 mt-1">{activity.time}</p>
+                  <p className="text-xs sm:text-sm font-medium text-gray-900 leading-tight">{activity.description}</p>
+                  <div className="flex items-center space-x-2 mt-1">
+                    <Calendar className="h-3 w-3 text-gray-400" />
+                    <p className="text-xs text-gray-500">{activity.time}</p>
+                  </div>
                 </div>
               </div>
             ))}
           </div>
+          <div className="mt-4 text-center">
+            <Button variant="outline" size="sm" className="text-xs">
+              View All Activity
+            </Button>
+          </div>
         </CardContent>
       </Card>
+
+      <PremiumModal 
+        isOpen={showPremiumModal} 
+        onClose={() => setShowPremiumModal(false)} 
+      />
     </div>
   );
 }

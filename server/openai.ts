@@ -223,6 +223,91 @@ Focus on:
   }
 }
 
+// New function to build a resume from scratch
+export async function buildResume(
+  personalInfo: any,
+  sections: any[],
+  industry: string,
+  template: string = 'professional'
+): Promise<string> {
+  try {
+    const industryKeywords = INDUSTRY_KEYWORDS[industry as keyof typeof INDUSTRY_KEYWORDS] || [];
+    
+    const buildPrompt = `
+You are a professional resume writer. Create a polished, ATS-optimized resume using the provided information.
+
+Personal Information:
+${JSON.stringify(personalInfo, null, 2)}
+
+Resume Sections:
+${sections.map(section => `${section.title}:\n${section.content}`).join('\n\n')}
+
+Industry: ${industry}
+Template Style: ${template}
+Relevant Keywords: ${industryKeywords.slice(0, 15).join(', ')}
+
+Create a professional resume that:
+1. Uses proper ATS-friendly formatting
+2. Incorporates relevant industry keywords naturally
+3. Follows the ${template} template style
+4. Has clear section headers and bullet points
+5. Quantifies achievements where possible
+6. Maintains professional tone throughout
+
+Format the resume as plain text with clear section breaks and proper spacing.
+Include all provided personal information at the top.
+Ensure the content flows naturally and reads professionally.
+
+Return only the formatted resume content, no additional commentary.
+`;
+
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o",
+      messages: [
+        {
+          role: "system",
+          content: "You are a professional resume writer. Create polished, ATS-optimized resumes. Return only the resume content with no additional commentary."
+        },
+        {
+          role: "user",
+          content: buildPrompt
+        }
+      ],
+      temperature: 0.4,
+    });
+
+    return response.choices[0].message.content || generateFallbackResume(personalInfo, sections);
+
+  } catch (error) {
+    console.error('Resume building error:', error);
+    return generateFallbackResume(personalInfo, sections);
+  }
+}
+
+function generateFallbackResume(personalInfo: any, sections: any[]): string {
+  let resume = '';
+  
+  // Header
+  resume += `${personalInfo.fullName}\n`;
+  if (personalInfo.email) resume += `Email: ${personalInfo.email}\n`;
+  if (personalInfo.phone) resume += `Phone: ${personalInfo.phone}\n`;
+  if (personalInfo.location) resume += `Location: ${personalInfo.location}\n`;
+  if (personalInfo.linkedin) resume += `LinkedIn: ${personalInfo.linkedin}\n`;
+  if (personalInfo.website) resume += `Website: ${personalInfo.website}\n`;
+  
+  resume += '\n' + '='.repeat(50) + '\n\n';
+  
+  // Sections
+  sections
+    .sort((a, b) => a.order - b.order)
+    .forEach(section => {
+      resume += `${section.title.toUpperCase()}\n`;
+      resume += section.content + '\n\n';
+    });
+  
+  return resume;
+}
+
 function generateDefaultSkillsGap(industry: string, resumeContent: string): SkillGap[] {
   const industryKeywords = INDUSTRY_KEYWORDS[industry as keyof typeof INDUSTRY_KEYWORDS] || [];
   const contentLower = resumeContent.toLowerCase();
