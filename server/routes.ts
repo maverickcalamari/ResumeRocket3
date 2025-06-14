@@ -1,8 +1,9 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { analyzeResume, generateResumeTemplate, buildResume } from "./openai";
-import { insertResumeSchema } from "@shared/schema";
+import { analyzeResume, generateResumeTemplate, buildResume, optimizeResumeContent } from "./openai";
+import { insertResumeSchema, loginSchema, registerSchema } from "@shared/schema";
+import { authenticateToken, optionalAuth, requireAdmin, hashPassword, comparePassword, generateToken, type AuthRequest } from "./auth";
 import multer from "multer";
 import { z } from "zod";
 
@@ -11,19 +12,147 @@ const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
   fileFilter: (req, file, cb) => {
-    const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+    const allowedTypes = [
+      'application/pdf', 
+      'application/msword', 
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'text/plain'
+    ];
     if (allowedTypes.includes(file.mimetype)) {
       cb(null, true);
     } else {
-      cb(new Error('Invalid file type. Only PDF and DOC files are allowed.'));
+      cb(new Error('Invalid file type. Only PDF, DOC, DOCX, and TXT files are allowed.'));
     }
   }
 });
 
+// Helper function to log user actions
+async function logUserAction(userId: number | undefined, action: string, details: any, req: any) {
+  if (userId) {
+    await storage.createAuditLog({
+      userId,
+      action,
+      details,
+      ipAddress: req.ip || req.connection.remoteAddress,
+      userAgent: req.get('User-Agent') || 'Unknown'
+    });
+  }
+}
+
 export async function registerRoutes(app: Express): Promise<Server> {
   
-  // Upload and analyze resume
-  app.post('/api/resumes/upload', upload.single('resume'), async (req, res) => {
+  // Authentication routes
+  app.post('/api/auth/register', async (req, res) => {
+    try {
+      const validatedData = registerSchema.parse(req.body);
+      
+      // Check if user already exists
+      const existingUser = await storage.getUserByEmail(validatedData.email);
+      if (existingUser) {
+        return res.status(400).json({ message: 'User already exists with this email' });
+      }
+
+      const existingUsername = await storage.getUserByUsername(validatedData.username);
+      if (existingUsername) {
+        return res.status(400).json({ message: 'Username already taken' });
+      }
+
+      // Hash password and create user
+      const hashedPassword = await hashPassword(validatedData.password);
+      const user = await storage.createUser({
+        ...validatedData,
+        password: hashedPassword,
+        role: 'user'
+      });
+
+      // Generate token
+      const token = generateToken(user.id);
+
+      // Log registration
+      await logUserAction(user.id, 'register', { email: user.email }, req);
+
+      res.status(201).json({
+        message: 'User created successfully',
+        token,
+        user: {
+          id: user.id,
+          username: user.username,
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          role: user.role
+        }
+      });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: 'Validation error', errors: error.errors });
+      }
+      console.error('Registration error:', error);
+      res.status(500).json({ message: 'Failed to create user' });
+    }
+  });
+
+  app.post('/api/auth/login', async (req, res) => {
+    try {
+      const validatedData = loginSchema.parse(req.body);
+      
+      // Find user by email
+      const user = await storage.getUserByEmail(validatedData.email);
+      if (!user) {
+        return res.status(401).json({ message: 'Invalid credentials' });
+      }
+
+      // Check password
+      const isValidPassword = await comparePassword(validatedData.password, user.password);
+      if (!isValidPassword) {
+        return res.status(401).json({ message: 'Invalid credentials' });
+      }
+
+      // Update last login
+      await storage.updateLastLogin(user.id);
+
+      // Generate token
+      const token = generateToken(user.id);
+
+      // Log login
+      await logUserAction(user.id, 'login', { email: user.email }, req);
+
+      res.json({
+        message: 'Login successful',
+        token,
+        user: {
+          id: user.id,
+          username: user.username,
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          role: user.role
+        }
+      });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: 'Validation error', errors: error.errors });
+      }
+      console.error('Login error:', error);
+      res.status(500).json({ message: 'Login failed' });
+    }
+  });
+
+  app.get('/api/auth/me', authenticateToken, async (req: AuthRequest, res) => {
+    res.json({
+      user: {
+        id: req.user!.id,
+        username: req.user!.username,
+        email: req.user!.email,
+        firstName: req.user!.firstName,
+        lastName: req.user!.lastName,
+        role: req.user!.role
+      }
+    });
+  });
+
+  // Resume routes
+  app.post('/api/resumes/upload', optionalAuth, upload.single('resume'), async (req: AuthRequest, res) => {
     try {
       if (!req.file) {
         return res.status(400).json({ message: 'No file uploaded' });
@@ -35,14 +164,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Extract text content from file
-      const originalContent = req.file.buffer.toString('utf-8');
+      let originalContent: string;
+      
+      if (req.file.mimetype === 'text/plain') {
+        originalContent = req.file.buffer.toString('utf-8');
+      } else {
+        // For PDF and DOC files, we'll use the buffer as text for now
+        // In production, you'd want to use proper PDF/DOC parsing libraries
+        originalContent = req.file.buffer.toString('utf-8');
+      }
       
       // Analyze resume with AI
       const analysis = await analyzeResume(originalContent, industry);
       
       // Save resume to storage
       const resumeData = {
-        userId: 1, // Default user for now
+        userId: req.user?.id || null,
         filename: req.file.originalname,
         originalContent,
         industry,
@@ -54,23 +191,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const resume = await storage.createResume(resumeData);
       
-      // Update user stats
-      const currentStats = await storage.getUserStats(1) || {
-        userId: 1,
-        resumesAnalyzed: 0,
-        avgScore: 0,
-        interviews: 0,
-      };
-      
-      const newResumeCount = (currentStats.resumesAnalyzed || 0) + 1;
-      const newAvgScore = Math.round(
-        (((currentStats.avgScore || 0) * (currentStats.resumesAnalyzed || 0)) + analysis.score) / newResumeCount
-      );
-      
-      await storage.updateUserStats(1, {
-        resumesAnalyzed: newResumeCount,
-        avgScore: newAvgScore,
-      });
+      // Update user stats if user is logged in
+      if (req.user) {
+        const currentStats = await storage.getUserStats(req.user.id) || {
+          userId: req.user.id,
+          resumesAnalyzed: 0,
+          avgScore: 0,
+          interviews: 0,
+          totalOptimizations: 0,
+        };
+        
+        const newResumeCount = (currentStats.resumesAnalyzed || 0) + 1;
+        const newAvgScore = Math.round(
+          (((currentStats.avgScore || 0) * (currentStats.resumesAnalyzed || 0)) + analysis.score) / newResumeCount
+        );
+        
+        await storage.updateUserStats(req.user.id, {
+          resumesAnalyzed: newResumeCount,
+          avgScore: newAvgScore,
+        });
+
+        // Log the upload
+        await logUserAction(req.user.id, 'upload_resume', { 
+          filename: req.file.originalname, 
+          industry, 
+          atsScore: analysis.score 
+        }, req);
+      }
 
       res.json(resume);
     } catch (error) {
@@ -79,8 +226,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Optimize resume content
+  app.post('/api/resumes/:id/optimize', optionalAuth, async (req: AuthRequest, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const resume = await storage.getResume(id);
+      
+      if (!resume) {
+        return res.status(404).json({ message: 'Resume not found' });
+      }
+
+      // Check if user owns the resume (if authenticated)
+      if (req.user && resume.userId !== req.user.id) {
+        return res.status(403).json({ message: 'Access denied' });
+      }
+
+      const optimizedContent = await optimizeResumeContent(
+        resume.originalContent,
+        resume.suggestions || [],
+        resume.industry
+      );
+
+      // Update resume with optimized content
+      const updatedResume = await storage.updateResume(id, {
+        optimizedContent
+      });
+
+      // Update user stats
+      if (req.user) {
+        const currentStats = await storage.getUserStats(req.user.id);
+        if (currentStats) {
+          await storage.updateUserStats(req.user.id, {
+            totalOptimizations: (currentStats.totalOptimizations || 0) + 1
+          });
+        }
+
+        // Log the optimization
+        await logUserAction(req.user.id, 'optimize_resume', { resumeId: id }, req);
+      }
+
+      res.json({ 
+        optimizedContent,
+        resume: updatedResume 
+      });
+    } catch (error) {
+      console.error('Resume optimization error:', error);
+      res.status(500).json({ message: 'Failed to optimize resume' });
+    }
+  });
+
   // Build resume from scratch
-  app.post('/api/resumes/build', async (req, res) => {
+  app.post('/api/resumes/build', optionalAuth, async (req: AuthRequest, res) => {
     try {
       const { personalInfo, sections, industry, template } = req.body;
       
@@ -92,7 +288,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Save the built resume
       const resumeData = {
-        userId: 1,
+        userId: req.user?.id || null,
         filename: `${personalInfo.fullName}_Built_Resume.txt`,
         originalContent: builtResume,
         industry,
@@ -104,6 +300,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const resume = await storage.createResume(resumeData);
       
+      // Log the build action
+      if (req.user) {
+        await logUserAction(req.user.id, 'build_resume', { 
+          industry, 
+          template,
+          sections: sections.length 
+        }, req);
+      }
+      
       res.json({ 
         content: builtResume,
         resume: resume
@@ -114,13 +319,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Export resume as PDF (placeholder - would need PDF generation library)
+  // Export resume as PDF (placeholder)
   app.post('/api/resumes/export-pdf', async (req, res) => {
     try {
       const { content, personalInfo, template } = req.body;
       
       // In a real implementation, you would use a PDF generation library like puppeteer or jsPDF
-      // For now, we'll return an error suggesting the text download
       res.status(501).json({ 
         message: 'PDF export not yet implemented. Please use text download.' 
       });
@@ -131,13 +335,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get resume by ID
-  app.get('/api/resumes/:id', async (req, res) => {
+  app.get('/api/resumes/:id', optionalAuth, async (req: AuthRequest, res) => {
     try {
       const id = parseInt(req.params.id);
       const resume = await storage.getResume(id);
       
       if (!resume) {
         return res.status(404).json({ message: 'Resume not found' });
+      }
+
+      // Check if user owns the resume or if resume is public
+      if (resume.userId && req.user?.id !== resume.userId && !resume.isPublic) {
+        return res.status(403).json({ message: 'Access denied' });
       }
       
       res.json(resume);
@@ -148,10 +357,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get user's resumes
-  app.get('/api/resumes', async (req, res) => {
+  app.get('/api/resumes', authenticateToken, async (req: AuthRequest, res) => {
     try {
-      const userId = 1; // Default user
-      const resumes = await storage.getResumesByUser(userId);
+      const resumes = await storage.getResumesByUser(req.user!.id);
       res.json(resumes);
     } catch (error) {
       console.error('Get resumes error:', error);
@@ -160,14 +368,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get user stats
-  app.get('/api/stats', async (req, res) => {
+  app.get('/api/stats', optionalAuth, async (req: AuthRequest, res) => {
     try {
-      const userId = 1; // Default user
-      const stats = await storage.getUserStats(userId) || {
-        userId: 1,
+      if (!req.user) {
+        // Return default stats for non-authenticated users
+        return res.json({
+          resumesAnalyzed: 0,
+          avgScore: 0,
+          interviews: 0,
+          totalOptimizations: 0
+        });
+      }
+
+      const stats = await storage.getUserStats(req.user.id) || {
+        userId: req.user.id,
         resumesAnalyzed: 0,
         avgScore: 0,
         interviews: 0,
+        totalOptimizations: 0
       };
       res.json(stats);
     } catch (error) {
@@ -177,9 +395,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Update resume content
-  app.patch('/api/resumes/:id', async (req, res) => {
+  app.patch('/api/resumes/:id', authenticateToken, async (req: AuthRequest, res) => {
     try {
       const id = parseInt(req.params.id);
+      const resume = await storage.getResume(id);
+      
+      if (!resume) {
+        return res.status(404).json({ message: 'Resume not found' });
+      }
+
+      // Check if user owns the resume
+      if (resume.userId !== req.user!.id) {
+        return res.status(403).json({ message: 'Access denied' });
+      }
+
       const { originalContent, industry } = req.body;
       
       if (originalContent && industry) {
@@ -195,21 +424,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
           skillsGap: analysis.skillsGap,
         });
         
-        if (!updatedResume) {
-          return res.status(404).json({ message: 'Resume not found' });
-        }
+        // Log the update
+        await logUserAction(req.user!.id, 'update_resume', { resumeId: id }, req);
         
         res.json(updatedResume);
       } else {
         const updatedResume = await storage.updateResume(id, req.body);
-        if (!updatedResume) {
-          return res.status(404).json({ message: 'Resume not found' });
-        }
         res.json(updatedResume);
       }
     } catch (error) {
       console.error('Update resume error:', error);
       res.status(500).json({ message: 'Failed to update resume' });
+    }
+  });
+
+  // Delete resume
+  app.delete('/api/resumes/:id', authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const resume = await storage.getResume(id);
+      
+      if (!resume) {
+        return res.status(404).json({ message: 'Resume not found' });
+      }
+
+      // Check if user owns the resume
+      if (resume.userId !== req.user!.id) {
+        return res.status(403).json({ message: 'Access denied' });
+      }
+
+      const deleted = await storage.deleteResume(id);
+      if (!deleted) {
+        return res.status(404).json({ message: 'Resume not found' });
+      }
+
+      // Log the deletion
+      await logUserAction(req.user!.id, 'delete_resume', { resumeId: id }, req);
+
+      res.json({ message: 'Resume deleted successfully' });
+    } catch (error) {
+      console.error('Delete resume error:', error);
+      res.status(500).json({ message: 'Failed to delete resume' });
     }
   });
 
@@ -231,17 +486,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Skills assessment endpoint
-  app.post('/api/skills/assess', async (req, res) => {
+  app.post('/api/skills/assess', authenticateToken, async (req: AuthRequest, res) => {
     try {
-      const { skills, industry, userId = 1 } = req.body;
+      const { skills, industry, overallScore, recommendations } = req.body;
       
-      // In a real app, you would save the skills assessment to the database
-      // For now, we'll just return a success response
+      const assessment = await storage.createSkillAssessment({
+        userId: req.user!.id,
+        industry,
+        skills,
+        overallScore,
+        recommendations
+      });
+
+      // Log the assessment
+      await logUserAction(req.user!.id, 'skills_assessment', { 
+        industry, 
+        overallScore,
+        skillsCount: skills?.length || 0 
+      }, req);
       
       res.json({ 
         message: 'Skills assessment saved successfully',
-        skills: skills,
-        recommendations: [
+        assessment,
+        recommendations: recommendations || [
           'Focus on improving your weakest skills first',
           'Consider taking online courses for skill gaps',
           'Practice with real-world projects',
@@ -251,6 +518,99 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Skills assessment error:', error);
       res.status(500).json({ message: 'Failed to save skills assessment' });
+    }
+  });
+
+  // Get user's skill assessments
+  app.get('/api/skills/assessments', authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const assessments = await storage.getSkillAssessmentsByUser(req.user!.id);
+      res.json(assessments);
+    } catch (error) {
+      console.error('Get assessments error:', error);
+      res.status(500).json({ message: 'Failed to get assessments' });
+    }
+  });
+
+  // Admin routes
+  app.get('/api/admin/users', authenticateToken, requireAdmin, async (req: AuthRequest, res) => {
+    try {
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 50;
+      const offset = (page - 1) * limit;
+
+      const users = await storage.getAllUsers(limit, offset);
+      const totalUsers = await storage.getUserCount();
+
+      res.json({
+        users,
+        pagination: {
+          page,
+          limit,
+          total: totalUsers,
+          pages: Math.ceil(totalUsers / limit)
+        }
+      });
+    } catch (error) {
+      console.error('Get users error:', error);
+      res.status(500).json({ message: 'Failed to get users' });
+    }
+  });
+
+  app.get('/api/admin/resumes', authenticateToken, requireAdmin, async (req: AuthRequest, res) => {
+    try {
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 50;
+      const offset = (page - 1) * limit;
+
+      const resumes = await storage.getAllResumes(limit, offset);
+      const totalResumes = await storage.getResumeCount();
+
+      res.json({
+        resumes,
+        pagination: {
+          page,
+          limit,
+          total: totalResumes,
+          pages: Math.ceil(totalResumes / limit)
+        }
+      });
+    } catch (error) {
+      console.error('Get all resumes error:', error);
+      res.status(500).json({ message: 'Failed to get resumes' });
+    }
+  });
+
+  app.get('/api/admin/analytics', authenticateToken, requireAdmin, async (req: AuthRequest, res) => {
+    try {
+      const analytics = await storage.getAnalyticsData();
+      res.json(analytics);
+    } catch (error) {
+      console.error('Get analytics error:', error);
+      res.status(500).json({ message: 'Failed to get analytics' });
+    }
+  });
+
+  app.get('/api/admin/audit-logs', authenticateToken, requireAdmin, async (req: AuthRequest, res) => {
+    try {
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 100;
+      const offset = (page - 1) * limit;
+
+      const logs = await storage.getAuditLogs(limit, offset);
+
+      res.json({
+        logs,
+        pagination: {
+          page,
+          limit,
+          total: logs.length,
+          pages: Math.ceil(logs.length / limit)
+        }
+      });
+    } catch (error) {
+      console.error('Get audit logs error:', error);
+      res.status(500).json({ message: 'Failed to get audit logs' });
     }
   });
 

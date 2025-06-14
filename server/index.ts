@@ -1,10 +1,14 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import { testConnection } from "./db";
 
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+
+// Trust proxy for accurate IP addresses
+app.set('trust proxy', true);
 
 app.use((req, res, next) => {
   const start = Date.now();
@@ -37,6 +41,12 @@ app.use((req, res, next) => {
 });
 
 (async () => {
+  // Test database connection
+  const dbConnected = await testConnection();
+  if (!dbConnected) {
+    log("⚠️  Database connection failed, using fallback storage");
+  }
+
   const server = await registerRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
@@ -65,6 +75,8 @@ app.use((req, res, next) => {
     host: "0.0.0.0",
     reusePort: true,
   }, () => {
-    log(`serving on port ${port}`);
+    log(`🚀 Server running on port ${port}`);
+    log(`📊 Dashboard: http://localhost:${port}`);
+    log(`🔧 API: http://localhost:${port}/api`);
   });
 })();

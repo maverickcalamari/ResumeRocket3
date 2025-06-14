@@ -7,9 +7,13 @@ import DashboardSidebar from "@/components/DashboardSidebar";
 import TemplateGenerator from "@/components/TemplateGenerator";
 import ResumeBuilder from "@/components/ResumeBuilder";
 import PremiumModal from "@/components/PremiumModal";
+import AuthModal from "@/components/AuthModal";
+import AdminDashboard from "@/components/AdminDashboard";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FileText, Upload, Wand2, Crown } from "lucide-react";
+import { FileText, Upload, Wand2, Crown, User, LogOut, Settings } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { useAuth, apiRequest } from "@/lib/auth";
 import pierlineLogoPath from "@assets/Black and Grey Clean Modern Minimalist Creative Technology Logo_1749417486921.png";
 
 interface Resume {
@@ -27,14 +31,26 @@ export default function Dashboard() {
   const [currentResume, setCurrentResume] = useState<Resume | null>(null);
   const [showEditor, setShowEditor] = useState(false);
   const [showPremiumModal, setShowPremiumModal] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
   const [activeTab, setActiveTab] = useState("upload");
+  const { user, isAuthenticated, logout } = useAuth();
 
   const { data: stats } = useQuery({
     queryKey: ['/api/stats'],
+    queryFn: async () => {
+      const response = await apiRequest('GET', '/api/stats');
+      return response.json();
+    },
   });
 
   const { data: resumes } = useQuery({
     queryKey: ['/api/resumes'],
+    queryFn: async () => {
+      if (!isAuthenticated) return [];
+      const response = await apiRequest('GET', '/api/resumes', undefined, true);
+      return response.json();
+    },
+    enabled: isAuthenticated,
   });
 
   const handleResumeUploaded = (resume: Resume) => {
@@ -45,6 +61,21 @@ export default function Dashboard() {
   const handlePremiumClick = () => {
     setShowPremiumModal(true);
   };
+
+  const handleAuthClick = () => {
+    setShowAuthModal(true);
+  };
+
+  const handleLogout = () => {
+    logout();
+    setCurrentResume(null);
+    setActiveTab("upload");
+  };
+
+  // Show admin dashboard if user is admin
+  if (user?.role === 'admin') {
+    return <AdminDashboard />;
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
@@ -65,31 +96,61 @@ export default function Dashboard() {
                 </div>
               </div>
             </div>
-            <div className="hidden md:flex items-center space-x-4">
-              <Button variant="ghost" size="sm" className="text-white hover:bg-white/20 hover:text-white">
-                Dashboard
-              </Button>
-              <Button variant="ghost" size="sm" className="text-white hover:bg-white/20 hover:text-white">
-                Analytics
-              </Button>
-              <Button 
-                onClick={handlePremiumClick}
-                size="sm" 
-                className="bg-white text-primary hover:bg-white/90 btn-professional font-semibold"
-              >
-                <Crown className="h-4 w-4 mr-2" />
-                Get Premium
-              </Button>
-            </div>
-            <div className="md:hidden">
-              <Button 
-                onClick={handlePremiumClick}
-                size="sm" 
-                className="bg-white text-primary hover:bg-white/90 btn-professional font-semibold"
-              >
-                <Crown className="h-4 w-4 mr-1" />
-                Premium
-              </Button>
+            <div className="flex items-center space-x-4">
+              {isAuthenticated ? (
+                <>
+                  <div className="hidden md:flex items-center space-x-4">
+                    <span className="text-white/90 text-sm">
+                      Welcome, {user?.firstName || user?.username}!
+                    </span>
+                    <Button 
+                      onClick={handlePremiumClick}
+                      size="sm" 
+                      className="bg-white text-primary hover:bg-white/90 btn-professional font-semibold"
+                    >
+                      <Crown className="h-4 w-4 mr-2" />
+                      Get Premium
+                    </Button>
+                  </div>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="sm" className="text-white hover:bg-white/20 hover:text-white">
+                        <User className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem>
+                        <Settings className="h-4 w-4 mr-2" />
+                        Settings
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={handleLogout}>
+                        <LogOut className="h-4 w-4 mr-2" />
+                        Logout
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </>
+              ) : (
+                <>
+                  <Button 
+                    onClick={handleAuthClick}
+                    variant="ghost" 
+                    size="sm" 
+                    className="text-white hover:bg-white/20 hover:text-white"
+                  >
+                    Sign In
+                  </Button>
+                  <Button 
+                    onClick={handlePremiumClick}
+                    size="sm" 
+                    className="bg-white text-primary hover:bg-white/90 btn-professional font-semibold"
+                  >
+                    <Crown className="h-4 w-4 mr-2" />
+                    Premium
+                  </Button>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -185,6 +246,11 @@ export default function Dashboard() {
       <PremiumModal 
         isOpen={showPremiumModal} 
         onClose={() => setShowPremiumModal(false)} 
+      />
+
+      <AuthModal 
+        isOpen={showAuthModal} 
+        onClose={() => setShowAuthModal(false)} 
       />
     </div>
   );
