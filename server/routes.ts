@@ -1,11 +1,14 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
-import { storage } from "./storage";
+import { MongoStorage } from "./mongoStorage";
 import { analyzeResume, generateResumeTemplate, buildResume, optimizeResumeContent } from "./openai";
 import { insertResumeSchema, loginSchema, registerSchema } from "@shared/schema";
 import { authenticateToken, optionalAuth, requireAdmin, hashPassword, comparePassword, generateToken, type AuthRequest } from "./auth";
 import multer from "multer";
 import { z } from "zod";
+
+// Use MongoDB storage
+const storage = new MongoStorage();
 
 // Configure multer for file uploads
 const upload = multer({ 

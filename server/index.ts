@@ -1,7 +1,7 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
-import { testConnection } from "./db";
+import { testMongoConnection } from "./mongodb";
 
 const app = express();
 app.use(express.json());
@@ -41,10 +41,10 @@ app.use((req, res, next) => {
 });
 
 (async () => {
-  // Test database connection
-  const dbConnected = await testConnection();
-  if (!dbConnected) {
-    log("⚠️  Database connection failed, using fallback storage");
+  // Test MongoDB connection
+  const mongoConnected = await testMongoConnection();
+  if (!mongoConnected) {
+    log("⚠️  MongoDB connection failed, using fallback storage");
   }
 
   const server = await registerRoutes(app);
