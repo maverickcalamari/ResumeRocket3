@@ -1,14 +1,35 @@
-import { useState } from "react";
+import { useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 
-// Remove features, savings, and plan selection if you want a single price
+interface PremiumModalProps {
+  isOpen: boolean;
+  onClose: (open: boolean) => void;
+}
 
-export default function PremiumModal({ isOpen, onClose }) {
-  // Flat price, no plan selection
+export default function PremiumModal({ isOpen, onClose }: PremiumModalProps) {
   const price = 49.99;
 
-  // Remove handleUpgrade (Stripe, etc.), we will embed PayPal below
+  useEffect(() => {
+    // Only run if PayPal isn't already loaded
+    if (typeof window !== "undefined" && !window.paypal) {
+      const script = document.createElement("script");
+      script.src = "https://www.paypal.com/sdk/js?client-id=BAAP2WHNZkL82bsMvM_5LuvOVvdVdoUELK20DBrEoUrViTiN41uiYT881kg43nhSN50wsayh-FpPmUDl7A&components=hosted-buttons&enable-funding=venmo&currency=USD";
+      script.async = true;
+      script.onload = () => {
+        if (window.paypal) {
+          window.paypal.HostedButtons({
+            hostedButtonId: "NCAWHR9E5S5U2" // Replace with your actual hosted button ID
+          }).render("#paypal-container");
+        }
+      };
+      document.body.appendChild(script);
+    } else if (window.paypal) {
+      window.paypal.HostedButtons({
+        hostedButtonId: "NCAWHR9E5S5U2"
+      }).render("#paypal-container");
+    }
+  }, [isOpen]);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -24,22 +45,8 @@ export default function PremiumModal({ isOpen, onClose }) {
           <div className="text-center">
             <div className="text-4xl font-bold text-gray-900 mb-2">${price}</div>
             <div className="mb-4 text-gray-600">One-time payment for full access</div>
-            {/* PayPal Button Embed */}
-            <div id="paypal-button-container" className="flex justify-center">
-              <script
-                src="https://www.paypal.com/sdk/js?client-id=BAAP2WHNZkL82bsMvM_5LuvOVvdVdoUELK20DBrEoUrViTiN41uiYT881kg43nhSN50wsayh-FpPmUDl7A&components=hosted-buttons&enable-funding=venmo&currency=USD"
-              ></script>
-              <div
-                dangerouslySetInnerHTML={{
-                  __html: `<div id="paypal-container"></div>
-                  <script>
-                    paypal.HostedButtons({
-                      hostedButtonId: "YOUR_HOSTED_BUTTON_ID" // Replace with your PayPal hosted button ID
-                    }).render('#paypal-container');
-                  </script>
-                  `
-                }}
-              />
+            <div className="flex justify-center">
+              <div id="paypal-container" />
             </div>
           </div>
         </div>
