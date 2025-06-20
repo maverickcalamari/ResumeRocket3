@@ -227,6 +227,7 @@ export default function DashboardSidebar({ stats, resumes }: DashboardSidebarPro
         isOpen={showPremiumModal} 
         onClose={() => setShowPremiumModal(false)} 
       />
+      {/* Remove premium CTAs and feature lists */}
     </div>
   );
 }
