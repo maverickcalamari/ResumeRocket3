@@ -25,7 +25,6 @@ export default function DashboardSidebar({ stats, resumes }: DashboardSidebarPro
   const [showSkillAssessment, setShowSkillAssessment] = useState(false);
   const [showPremiumModal, setShowPremiumModal] = useState(false);
 
-  // Mock skills data for demonstration
   const mockSkills = [
     { name: 'JavaScript', level: 90, color: 'bg-green-600' },
     { name: 'React', level: 85, color: 'bg-green-600' },
@@ -33,7 +32,6 @@ export default function DashboardSidebar({ stats, resumes }: DashboardSidebarPro
     { name: 'AWS', level: 30, color: 'bg-red-600' },
   ];
 
-  // Enhanced activity data with more realistic entries
   const mockActivities = [
     { 
       id: 1, 
@@ -95,14 +93,27 @@ export default function DashboardSidebar({ stats, resumes }: DashboardSidebarPro
     );
   }
 
-export default function DashboardSidebar({ stats }) {
   return (
     <div className="space-y-4 sm:space-y-6">
       {/* Quick Stats */}
-@@ -123,119 +29,7 @@ export default function DashboardSidebar({ stats, resumes }: DashboardSidebarPro
-          </div>
-        </CardContent>
-      </Card>
+      {stats && (
+        <Card className="transition-all duration-300">
+          <CardContent className="p-4 sm:p-6 grid grid-cols-3 gap-4 text-center">
+            <div>
+              <p className="text-xs text-gray-500 mb-1">Resumes Analyzed</p>
+              <p className="text-lg font-semibold">{stats.resumesAnalyzed}</p>
+            </div>
+            <div>
+              <p className="text-xs text-gray-500 mb-1">Avg. Score</p>
+              <p className="text-lg font-semibold">{stats.avgScore}%</p>
+            </div>
+            <div>
+              <p className="text-xs text-gray-500 mb-1">Interviews</p>
+              <p className="text-lg font-semibold">{stats.interviews}</p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Premium Upgrade CTA */}
       <Card className="card-professional transition-all duration-300 bg-gradient-to-br from-yellow-50 to-orange-50 border-yellow-200">
@@ -197,7 +208,7 @@ export default function DashboardSidebar({ stats }) {
                 <div className="flex-1 min-w-0">
                   <p className="text-xs sm:text-sm font-medium text-gray-900 leading-tight">{activity.description}</p>
                   <div className="flex items-center space-x-2 mt-1">
-                    <Calendar className="h-3 w-3 text-gray-400" />Add commentMore actions
+                    <Calendar className="h-3 w-3 text-gray-400" />
                     <p className="text-xs text-gray-500">{activity.time}</p>
                   </div>
                 </div>
@@ -216,7 +227,6 @@ export default function DashboardSidebar({ stats }) {
         isOpen={showPremiumModal} 
         onClose={() => setShowPremiumModal(false)} 
       />
-      {/* Remove premium CTAs and feature lists */}
     </div>
   );
 }
