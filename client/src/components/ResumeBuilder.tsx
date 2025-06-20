@@ -1,24 +1,22 @@
 import { useState } from "react";
 import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Download, Eye, FileText, Plus, Trash2 } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
+import { Download, Eye, FileText } from "lucide-react";
 
 export default function ResumeBuilder() {
-  // ... other state and logic
-
-  // Assume generatedResume, showPreview, setShowPreview, personalInfo, etc. exist
+  const [showPreview, setShowPreview] = useState(false);
+  const [generatedResume, setGeneratedResume] = useState<string | null>(
+    "John Doe\nFrontend Developer\n\nExperience:\n- Company A: React Developer\n- Company B: Web Designer"
+  );
+  const [personalInfo] = useState({ fullName: "John Doe" });
 
   const downloadResume = () => {
     if (!generatedResume) return;
-    const blob = new Blob([generatedResume], { type: 'text/plain' });
+    const blob = new Blob([generatedResume], { type: "text/plain" });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = url;
-    a.download = `${personalInfo.fullName.replace(/\s+/g, '_')}_Resume.txt`;
+    a.download = `${personalInfo.fullName.replace(/\s+/g, "_")}_Resume.txt`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -55,20 +53,20 @@ export default function ResumeBuilder() {
         </CardHeader>
         <CardContent>
           <div className="bg-white border border-gray-200 rounded-lg p-6 max-h-96 overflow-y-auto">
-            <pre className="whitespace-pre-wrap font-mono text-sm">
-              {generatedResume}
-            </pre>
+            <pre className="whitespace-pre-wrap font-mono text-sm">{generatedResume}</pre>
           </div>
         </CardContent>
       </Card>
     );
   }
 
-  // ... rest of ResumeBuilder form rendering for editing/building
   return (
-    <Card className="card-professional">
-      {/* ...rest of the ResumeBuilder editor code here */}
-      {/* Ensure there is NO PDF export logic or buttons */}
+    <Card className="card-professional p-6">
+      <div className="mb-4">
+        <h2 className="text-xl font-bold text-gray-800">Resume Builder (WIP)</h2>
+        <p className="text-sm text-gray-600 mb-2">Click below to preview your resume.</p>
+        <Button onClick={() => setShowPreview(true)}>Preview Resume</Button>
+      </div>
     </Card>
   );
 }
