@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 
@@ -9,27 +9,36 @@ interface PremiumModalProps {
 
 export default function PremiumModal({ isOpen, onClose }: PremiumModalProps) {
   const price = 49.99;
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [paypalLoaded, setPaypalLoaded] = useState(false);
 
   useEffect(() => {
-    // Only run if PayPal isn't already loaded
-    if (typeof window !== "undefined" && !window.paypal) {
+    if (!isOpen || typeof window === "undefined") return;
+
+    const renderPayPal = () => {
+      if (window.paypal && containerRef.current && !paypalLoaded) {
+        try {
+          window.paypal.HostedButtons({
+            hostedButtonId: "NCAWHR9E5S5U2"
+          }).render(containerRef.current);
+          setPaypalLoaded(true);
+        } catch (err) {
+          console.error("PayPal render failed:", err);
+        }
+      }
+    };
+
+    if (!window.paypal) {
       const script = document.createElement("script");
       script.src = "https://www.paypal.com/sdk/js?client-id=BAAP2WHNZkL82bsMvM_5LuvOVvdVdoUELK20DBrEoUrViTiN41uiYT881kg43nhSN50wsayh-FpPmUDl7A&components=hosted-buttons&enable-funding=venmo&currency=USD";
       script.async = true;
-      script.onload = () => {
-        if (window.paypal) {
-          window.paypal.HostedButtons({
-            hostedButtonId: "NCAWHR9E5S5U2" // Replace with your actual hosted button ID
-          }).render("#paypal-container");
-        }
-      };
+      script.onload = renderPayPal;
+      script.onerror = () => console.error("Failed to load PayPal script");
       document.body.appendChild(script);
-    } else if (window.paypal) {
-      window.paypal.HostedButtons({
-        hostedButtonId: "NCAWHR9E5S5U2"
-      }).render("#paypal-container");
+    } else {
+      renderPayPal();
     }
-  }, [isOpen]);
+  }, [isOpen, paypalLoaded]);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -41,13 +50,21 @@ export default function PremiumModal({ isOpen, onClose }: PremiumModalProps) {
             </span>
           </DialogTitle>
         </DialogHeader>
+
         <div className="space-y-6">
           <div className="text-center">
             <div className="text-4xl font-bold text-gray-900 mb-2">${price}</div>
             <div className="mb-4 text-gray-600">One-time payment for full access</div>
+
             <div className="flex justify-center">
-              <div id="paypal-container" />
+              <div ref={containerRef} style={{ minHeight: 50 }} />
             </div>
+
+            {!paypalLoaded && (
+              <div className="text-sm text-gray-500 mt-4">
+                Loading payment options…
+              </div>
+            )}
           </div>
         </div>
       </DialogContent>
