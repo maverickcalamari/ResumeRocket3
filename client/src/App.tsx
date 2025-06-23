@@ -1,32 +1,47 @@
-// App.tsx
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import React from "react";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/toaster";
-import { queryClient } from "./lib/queryClient";
-
-// Page components
+import { queryClient } from "@/lib/queryClient";
 import Dashboard from "@/pages/dashboard";
 import AdminDashboard from "@/components/AdminDashboard";
 import ContactUs from "@/pages/ContactUs";
 import NotFound from "@/pages/not-found";
+import { useAuth } from "@/lib/auth";
 
-function App() {
+function PrivateAdminRoute({ children }: { children: JSX.Element }) {
+  const { user } = useAuth();
+  if (user?.role !== "admin") {
+    return <Navigate to="/" replace />;
+  }
+  return children;
+}
+
+function AppRoutes() {
+  return (
+    <Routes>
+      <Route path="/" element={<Dashboard />} />
+      <Route path="/admin" element={
+        <PrivateAdminRoute>
+          <AdminDashboard />
+        </PrivateAdminRoute>
+      } />
+      <Route path="/contact" element={<ContactUs />} />
+      <Route path="*" element={<NotFound />} />
+    </Routes>
+  );
+}
+
+export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <Toaster />
         <Router>
-          <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/admin" element={<AdminDashboard />} />
-            <Route path="/contact" element={<ContactUs />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+          <AppRoutes />
         </Router>
       </TooltipProvider>
     </QueryClientProvider>
   );
 }
-
-export default App;
