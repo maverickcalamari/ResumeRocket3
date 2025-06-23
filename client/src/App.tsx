@@ -35,12 +35,13 @@ export default function App() {
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <Toaster />
-        <Router>
-  <AuthProvider> 
-    <AppRoutes />
-  </AuthProvider>
-        </Router>
+        <AuthProvider> 
+          <Router>
+            <AppRoutes />
+          </Router>
+        </AuthProvider>
       </TooltipProvider>
     </QueryClientProvider>
   );
 }
+
