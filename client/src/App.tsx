@@ -6,6 +6,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { queryClient } from "@/lib/queryClient";
 import Dashboard from "@/pages/dashboard";
 import AdminDashboard from "@/components/AdminDashboard";
+import DashboardSidebar from "@/components/DashboardSidebar";
 import ContactUs from "@/pages/ContactUs";
 import NotFound from "@/pages/not-found";
 
