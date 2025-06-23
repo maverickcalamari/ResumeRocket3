@@ -8,7 +8,7 @@ import Dashboard from "@/pages/dashboard";
 import AdminDashboard from "@/components/AdminDashboard";
 import ContactUs from "@/pages/ContactUs";
 import NotFound from "@/pages/not-found";
-import { useAuth, AuthProvider } from "@/lib/auth";
+import { useAuth } from "@/lib/auth";
 
 function PrivateAdminRoute({ children }: { children: JSX.Element }) {
   const { user } = useAuth();
@@ -38,11 +38,9 @@ export default function App() {
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <Toaster />
-        <AuthProvider>
-          <Router>
-            <AppRoutes />
-          </Router>
-        </AuthProvider>
+        <Router>
+          <AppRoutes />
+        </Router>
       </TooltipProvider>
     </QueryClientProvider>
   );
