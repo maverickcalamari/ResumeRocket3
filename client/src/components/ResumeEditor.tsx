@@ -7,7 +7,7 @@ import { Undo, Redo, Save, Eye } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface ResumeEditorProps {
-  resume: {
+  resume?: {
     id: number;
     originalContent: string;
     industry: string;
@@ -16,8 +16,11 @@ interface ResumeEditorProps {
 }
 
 export default function ResumeEditor({ resume, onUpdate }: ResumeEditorProps) {
-  // Ensure fallback to empty string for content
-  const [content, setContent] = useState(resume.originalContent ?? "");
+  if (!resume || !resume.originalContent) {
+    return <p className="text-sm text-gray-500">No resume loaded.</p>;
+  }
+
+  const [content, setContent] = useState(resume.originalContent);
   const [isPreview, setIsPreview] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -67,12 +70,10 @@ export default function ResumeEditor({ resume, onUpdate }: ResumeEditorProps) {
           <h2 className="text-xl font-semibold text-gray-900">Resume Editor</h2>
           <div className="flex space-x-2">
             <Button variant="outline" size="sm" disabled>
-              <Undo className="h-4 w-4 mr-1" />
-              Undo
+              <Undo className="h-4 w-4 mr-1" /> Undo
             </Button>
             <Button variant="outline" size="sm" disabled>
-              <Redo className="h-4 w-4 mr-1" />
-              Redo
+              <Redo className="h-4 w-4 mr-1" /> Redo
             </Button>
             <Button 
               variant="outline" 
@@ -92,7 +93,7 @@ export default function ResumeEditor({ resume, onUpdate }: ResumeEditorProps) {
             </Button>
           </div>
         </div>
-        
+
         {isPreview ? (
           <div className="border border-gray-200 rounded-lg p-6 bg-white min-h-96">
             <pre className="whitespace-pre-wrap font-mono text-sm">
