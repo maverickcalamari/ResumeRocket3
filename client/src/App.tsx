@@ -12,10 +12,7 @@ import { useAuth } from "@/lib/auth";
 
 function PrivateAdminRoute({ children }: { children: JSX.Element }) {
   const { user } = useAuth();
-  if (user?.role !== "admin") {
-    return <Navigate to="/" replace />;
-  }
-  return children;
+  return user?.role === "admin" ? children : <Navigate to="/" replace />;
 }
 
 function AppRoutes() {
@@ -39,7 +36,9 @@ export default function App() {
       <TooltipProvider>
         <Toaster />
         <Router>
-          <AppRoutes />
+  <AuthProvider> 
+    <AppRoutes />
+  </AuthProvider>
         </Router>
       </TooltipProvider>
     </QueryClientProvider>
