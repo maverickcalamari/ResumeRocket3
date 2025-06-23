@@ -12,6 +12,7 @@ import NotFound from "@/pages/not-found";
 function AppRoutes() {
   return (
     <Routes>
+      <Route path="/test" element={<div style={{ padding: 50 }}><h1>Test Page Works ✅</h1></div>} />
       <Route path="/" element={<div style={{ padding: 40 }}><h1>✅ Router Working</h1></div>} />
       <Route path="/admin" element={<AdminDashboard />} />
       <Route path="/contact" element={<ContactUs />} />
