@@ -5,7 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/toaster";
 import { queryClient } from "@/lib/queryClient";
 import Dashboard from "@/pages/dashboard";
-import AdminDashboard from "@/pages/admin";
+import AdminDashboard from "@/components/AdminDashboard";
 import ContactUs from "@/pages/contact";
 import NotFound from "@/pages/not-found";
 
