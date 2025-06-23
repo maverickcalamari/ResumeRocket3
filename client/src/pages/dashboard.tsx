@@ -9,6 +9,7 @@ import ResumeBuilder from "@/components/ResumeBuilder";
 import PremiumModal from "@/components/PremiumModal";
 import AuthModal from "@/components/AuthModal";
 import AdminDashboard from "@/components/AdminDashboard";
+import DashboardSidebar from "@/components/DashboardSidebar";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FileText, Upload, Wand2, Crown, User, LogOut, Settings } from "lucide-react";
