@@ -6,7 +6,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { queryClient } from "@/lib/queryClient";
 import Dashboard from "@/pages/dashboard";
 import AdminDashboard from "@/components/AdminDashboard";
-import ContactUs from "@/pages/contact";
+import ContactUs from "@/pages/ContactUs";
 import NotFound from "@/pages/not-found";
 
 function AppRoutes() {
