@@ -16,7 +16,8 @@ interface ResumeEditorProps {
 }
 
 export default function ResumeEditor({ resume, onUpdate }: ResumeEditorProps) {
-  const [content, setContent] = useState(resume.originalContent);
+  // Ensure fallback to empty string for content
+  const [content, setContent] = useState(resume.originalContent ?? "");
   const [isPreview, setIsPreview] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -94,22 +95,21 @@ export default function ResumeEditor({ resume, onUpdate }: ResumeEditorProps) {
         
         {isPreview ? (
           <div className="border border-gray-200 rounded-lg p-6 bg-white min-h-96">
-            <div className="whitespace-pre-wrap font-mono text-sm">
+            <pre className="whitespace-pre-wrap font-mono text-sm">
               {content}
-            </div>
+            </pre>
           </div>
         ) : (
           <Textarea
             value={content}
-            onChange={(e) => setContent(e.target.value)}
-            className="min-h-96 font-mono text-sm"
-            placeholder="Edit your resume content here..."
+            onChange={e => setContent(e.target.value)}
+            minRows={18}
+            className="min-h-96 font-mono"
+            spellCheck={true}
+            autoCorrect="on"
+            autoComplete="on"
           />
         )}
-        
-        <div className="mt-4 text-sm text-gray-500">
-          <p>💡 Tip: Edit your resume content and click "Save & Re-analyze" to get updated ATS scoring and suggestions.</p>
-        </div>
       </CardContent>
     </Card>
   );

@@ -25,7 +25,6 @@ export default function DashboardSidebar({ stats, resumes }: DashboardSidebarPro
   const [showSkillAssessment, setShowSkillAssessment] = useState(false);
   const [showPremiumModal, setShowPremiumModal] = useState(false);
 
-  // Mock skills data for demonstration
   const mockSkills = [
     { name: 'JavaScript', level: 90, color: 'bg-green-600' },
     { name: 'React', level: 85, color: 'bg-green-600' },
@@ -33,7 +32,6 @@ export default function DashboardSidebar({ stats, resumes }: DashboardSidebarPro
     { name: 'AWS', level: 30, color: 'bg-red-600' },
   ];
 
-  // Enhanced activity data with more realistic entries
   const mockActivities = [
     { 
       id: 1, 
@@ -98,31 +96,24 @@ export default function DashboardSidebar({ stats, resumes }: DashboardSidebarPro
   return (
     <div className="space-y-4 sm:space-y-6">
       {/* Quick Stats */}
-      <Card className="card-professional transition-all duration-300">
-        <CardContent className="p-4 sm:p-6">
-          <h3 className="font-semibold text-gray-900 mb-3 sm:mb-4 text-base sm:text-lg">Your Progress</h3>
-          <div className="space-y-3 sm:space-y-4">
-            <div className="flex items-center justify-between">
-              <span className="text-gray-600 text-sm sm:text-base">Resumes Analyzed</span>
-              <span className="font-semibold text-gray-900 text-sm sm:text-base">
-                {stats?.resumesAnalyzed || 0}
-              </span>
+      {stats && (
+        <Card className="transition-all duration-300">
+          <CardContent className="p-4 sm:p-6 grid grid-cols-3 gap-4 text-center">
+            <div>
+              <p className="text-xs text-gray-500 mb-1">Resumes Analyzed</p>
+              <p className="text-lg font-semibold">{stats.resumesAnalyzed}</p>
             </div>
-            <div className="flex items-center justify-between">
-              <span className="text-gray-600 text-sm sm:text-base">Avg. ATS Score</span>
-              <span className="font-semibold text-green-600 text-sm sm:text-base">
-                {stats?.avgScore || 0}%
-              </span>
+            <div>
+              <p className="text-xs text-gray-500 mb-1">Avg. Score</p>
+              <p className="text-lg font-semibold">{stats.avgScore}%</p>
             </div>
-            <div className="flex items-center justify-between">
-              <span className="text-gray-600 text-sm sm:text-base">Interviews Booked</span>
-              <span className="font-semibold text-gray-900 text-sm sm:text-base">
-                {stats?.interviews || 0}
-              </span>
+            <div>
+              <p className="text-xs text-gray-500 mb-1">Interviews</p>
+              <p className="text-lg font-semibold">{stats.interviews}</p>
             </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Premium Upgrade CTA */}
       <Card className="card-professional transition-all duration-300 bg-gradient-to-br from-yellow-50 to-orange-50 border-yellow-200">
@@ -236,6 +227,7 @@ export default function DashboardSidebar({ stats, resumes }: DashboardSidebarPro
         isOpen={showPremiumModal} 
         onClose={() => setShowPremiumModal(false)} 
       />
+      {/* Remove premium CTAs and feature lists */}
     </div>
   );
 }
