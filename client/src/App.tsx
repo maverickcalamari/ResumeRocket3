@@ -52,11 +52,6 @@ interface ResumeEditorProps {
   onUpdate: (resume: any) => void;
 }
 
-export default function ResumeEditor({ resume, onUpdate }: ResumeEditorProps) {
-  if (!resume || !resume.originalContent) {
-    return <p className="text-sm text-gray-500">No resume loaded.</p>;
-  }
-
   const [content, setContent] = useState(resume.originalContent ?? "");
   const [isPreview, setIsPreview] = useState(false);
   const { toast } = useToast();
