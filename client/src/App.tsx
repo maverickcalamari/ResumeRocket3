@@ -8,7 +8,7 @@ import { queryClient } from "./lib/queryClient";
 // Page components
 import Dashboard from "@/pages/dashboard";
 import AdminDashboard from "@/components/AdminDashboard";
-import ContactUs from "@/pages/contact";
+import ContactUs from "@/pages/ContactUs";
 import NotFound from "@/pages/not-found";
 
 function App() {
