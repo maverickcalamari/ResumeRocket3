@@ -6,10 +6,10 @@ import { Toaster } from "@/components/ui/toaster";
 import { queryClient } from "./lib/queryClient";
 
 // Page components
-import Dashboard from "@/pages/dashboard";
-import AdminDashboard from "@/pages/admin";
-import ContactUs from "@/pages/contact";
-import NotFound from "@/pages/not-found";
+import Dashboard from "@/components/dashboard";
+import AdminDashboard from "@/components/admin";
+import ContactUs from "@/components/contact";
+import NotFound from "@/components/not-found";
 
 function App() {
   return (
