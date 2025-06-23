@@ -8,11 +8,14 @@ import Dashboard from "@/pages/dashboard";
 import AdminDashboard from "@/components/AdminDashboard";
 import ContactUs from "@/pages/ContactUs";
 import NotFound from "@/pages/not-found";
-import { useAuth } from "@/lib/auth";
+import { useAuth, AuthProvider } from "@/lib/auth";
 
 function PrivateAdminRoute({ children }: { children: JSX.Element }) {
   const { user } = useAuth();
-  return user?.role === "admin" ? children : <Navigate to="/" replace />;
+  if (user?.role !== "admin") {
+    return <Navigate to="/" replace />;
+  }
+  return children;
 }
 
 function AppRoutes() {
@@ -35,7 +38,7 @@ export default function App() {
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <Toaster />
-        <AuthProvider> 
+        <AuthProvider>
           <Router>
             <AppRoutes />
           </Router>
@@ -44,4 +47,3 @@ export default function App() {
     </QueryClientProvider>
   );
 }
-
