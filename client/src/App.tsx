@@ -1,30 +1,29 @@
-import { Switch, Route } from "wouter";
+// App.tsx
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/toaster";
+import { queryClient } from "./lib/queryClient";
+
+// Page components
 import Dashboard from "@/pages/dashboard";
 import AdminDashboard from "@/pages/admin";
 import ContactUs from "@/pages/contact";
 import NotFound from "@/pages/not-found";
-import { queryClient } from "./lib/queryClient";
-
-function Router() {
-  return (
-    <Switch>
-      <Route path="/" component={Dashboard} />
-      <Route path="/admin" component={AdminDashboard} />
-      <Route path="/contact" component={ContactUs} />
-      <Route component={NotFound} />
-    </Switch>
-  );
-}
 
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <Toaster />
-        <Router />
+        <Router>
+          <Routes>
+            <Route path="/" element={<Dashboard />} />
+            <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/contact" element={<ContactUs />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </Router>
       </TooltipProvider>
     </QueryClientProvider>
   );
