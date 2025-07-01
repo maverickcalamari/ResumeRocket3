@@ -22,7 +22,7 @@ export default function ResumeEditor({ resume, onUpdate }: ResumeEditorProps) {
     return <p className="text-sm text-gray-500">No resume loaded.</p>;
   }
 
-  const [content, setContent] = useState(resume.originalContent);
+  const [content, setContent] = useState(resume?.originalContent ?? "");
   const [history, setHistory] = useState<string[]>([]);
   const [redoStack, setRedoStack] = useState<string[]>([]);
   const [isPreview, setIsPreview] = useState(false);
