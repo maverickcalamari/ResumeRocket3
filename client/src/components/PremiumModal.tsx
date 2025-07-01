@@ -1,5 +1,12 @@
+"use client";
+
 import { useEffect, useRef } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 interface PremiumModalProps {
   isOpen: boolean;
@@ -9,6 +16,7 @@ interface PremiumModalProps {
 export default function PremiumModal({ isOpen, onClose }: PremiumModalProps) {
   const price = 49.99;
   const containerRef = useRef<HTMLDivElement>(null);
+  const scriptRef = useRef<HTMLScriptElement | null>(null);
 
   useEffect(() => {
     if (!isOpen || typeof window === "undefined") return;
@@ -16,8 +24,9 @@ export default function PremiumModal({ isOpen, onClose }: PremiumModalProps) {
     const renderPayPal = () => {
       if (window.paypal && containerRef.current) {
         try {
+          containerRef.current.innerHTML = ""; // Clear existing buttons
           window.paypal.HostedButtons({
-            hostedButtonId: "NCAWHR9E5S5U2"
+            hostedButtonId: "NCAWHR9E5S5U2",
           }).render(containerRef.current);
         } catch (err) {
           console.error("PayPal render failed:", err);
@@ -32,14 +41,26 @@ export default function PremiumModal({ isOpen, onClose }: PremiumModalProps) {
       script.async = true;
       script.onload = renderPayPal;
       document.body.appendChild(script);
+      scriptRef.current = script;
     } else {
       renderPayPal();
     }
+
+    return () => {
+      // Clean up PayPal script (optional, prevents clutter)
+      if (scriptRef.current) {
+        scriptRef.current.remove();
+        scriptRef.current = null;
+      }
+    };
   }, [isOpen]);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent
+        className="max-w-4xl max-h-[90vh] overflow-y-auto"
+        aria-describedby="premium-modal-description"
+      >
         <DialogHeader>
           <DialogTitle className="text-center">
             <span className="text-2xl font-bold bg-gradient-to-r from-yellow-600 to-orange-600 bg-clip-text text-transparent">
@@ -48,9 +69,15 @@ export default function PremiumModal({ isOpen, onClose }: PremiumModalProps) {
           </DialogTitle>
         </DialogHeader>
 
+        <div id="premium-modal-description" className="sr-only">
+          One-time payment for premium resume access via PayPal Hosted Buttons.
+        </div>
+
         <div className="space-y-6 text-center">
           <div className="text-4xl font-bold text-gray-900 mb-2">${price}</div>
-          <div className="mb-4 text-gray-600">One-time payment for full access</div>
+          <div className="mb-4 text-gray-600">
+            One-time payment for full access
+          </div>
           <div className="flex justify-center">
             <div
               ref={containerRef}
@@ -59,7 +86,7 @@ export default function PremiumModal({ isOpen, onClose }: PremiumModalProps) {
                 maxWidth: "400px",
                 width: "100%",
                 minHeight: "80px",
-                overflow: "hidden"
+                overflow: "hidden",
               }}
             />
           </div>
