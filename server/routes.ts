@@ -168,7 +168,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Upload the file to S3
-const fileUrl = await uploadToS3(req.file.buffer, req.file.originalname, req.file.mimetype);
+      if (!req.file || !req.file.buffer) {
+        console.error("⛔ File or buffer missing or invalid:", req.file);
+        return res.status(400).json({ message: "Uploaded file is missing or invalid" });
+      }
+      
+      let buffer: Buffer;
+      try {
+        buffer = Buffer.isBuffer(req.file.buffer)
+          ? req.file.buffer
+          : Buffer.from(req.file.buffer as any); // ✅ force conversion
+      } catch (e) {
+        console.error("❌ Failed to convert file to buffer:", e);
+        return res.status(400).json({ message: "Failed to process uploaded file" });
+      }
+      
+      console.log("🧪 Uploading file with buffer of length:", buffer.length);
+      
+      const fileUrl = await uploadToS3(buffer, req.file.originalname, req.file.mimetype);          
 
 // Extract resume text from buffer (basic fallback until PDF/DOCX parser is added)
 const originalContent = req.file.buffer.toString('utf-8');
