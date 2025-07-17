@@ -320,6 +320,7 @@ const originalContent = req.file.buffer.toString('utf-8');
 
       const resume = await storage.createResume(resumeData);
       
+      console.log("✅ Built resume saved:", resume);
       // Log the build action
       if (req.user) {
         await logUserAction(req.user.id, 'build_resume', { 
