@@ -9,6 +9,7 @@ interface AnalysisResultsProps {
     id: number;
     filename: string;
     atsScore: number;
+    _source?: "openai" | "fallback"; // ✅ NEW FIELD
     analysis: {
       score: number;
       strengths: string[];
@@ -37,7 +38,7 @@ interface AnalysisResultsProps {
 }
 
 export default function AnalysisResults({ resume, onEdit }: AnalysisResultsProps) {
-  const { analysis, suggestions, atsScore } = resume;
+  const { analysis, suggestions, atsScore, _source } = resume;
 
   const getScoreColor = (score: number) => {
     if (score >= 80) return 'text-green-600';

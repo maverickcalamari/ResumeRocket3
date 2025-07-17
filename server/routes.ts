@@ -188,6 +188,7 @@ const originalContent = req.file.buffer.toString('utf-8');
         analysis: analysis.analysis,
         suggestions: analysis.suggestions,
         skillsGap: analysis.skillsGap,
+        _source: analysis._source // ✅ Add this line
       };
       
 

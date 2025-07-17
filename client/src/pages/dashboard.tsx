@@ -131,8 +131,12 @@ export default function Dashboard() {
               <TabsContent value="upload" className="space-y-6">
                 <FileUpload onResumeUploaded={handleResumeUploaded} />
                 {currentResume && (
-                  <AnalysisResults resume={currentResume} onEdit={() => setShowEditor(true)} />
-                )}
+  <AnalysisResults
+    resume={currentResume}
+    source={currentResume._source} // ✅ add this
+    onEdit={() => setShowEditor(true)}
+  />
+)}
                 {showEditor && currentResume?.originalContent && (
                   <ResumeEditor resume={currentResume} onUpdate={setCurrentResume} />
                 )}
@@ -149,8 +153,9 @@ export default function Dashboard() {
           </div>
 
           <div className="xl:col-span-1">
-            <DashboardSidebar stats={stats} resumes={resumes} />
-          </div>
+  <DashboardSidebar stats={stats} resumes={resumes} />
+</div>
+
         </div>
       </div>
 

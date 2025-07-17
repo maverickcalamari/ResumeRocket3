@@ -1,18 +1,22 @@
+import dotenv from 'dotenv';
+dotenv.config(); // ✅ MUST be first thing before accessing process.env
+
 import OpenAI from "openai";
 import { ResumeAnalysis, ResumeSuggestion, SkillGap, EmploymentGap, ResumeTemplate, SectionAnalysis, CompetitiveAnalysis } from "@shared/schema";
-import dotenv from 'dotenv';
 
-console.log('OPENAI_API_KEY:', process.env.OPENAI_API_KEY); // Add this before new OpenAI()
+// Optional debug log
+console.log('OPENAI_API_KEY:', process.env.OPENAI_API_KEY);
 
-// the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY, // 
+  apiKey: process.env.OPENAI_API_KEY!,
 });
+
 interface AIAnalysisResult {
   score: number;
   analysis: ResumeAnalysis;
   suggestions: ResumeSuggestion[];
   skillsGap: SkillGap[];
+  _source?: "openai" | "fallback"; 
 }
 
 const INDUSTRY_KEYWORDS = {
@@ -276,12 +280,14 @@ Focus on:
         }))
       : generateDefaultSkillsGap(industry, resumeContent);
 
-    return {
-      score: analysis.score,
-      analysis,
-      suggestions,
-      skillsGap,
-    };
+      return {
+        score: analysis.score,
+        analysis,
+        suggestions,
+        skillsGap,
+        _source: "openai"
+      };
+      
 
   } catch (error) {
     console.error('OpenAI analysis error:', error);
@@ -588,7 +594,8 @@ function generateFallbackAnalysis(resumeContent: string, industry: string): AIAn
     analysis,
     suggestions,
     skillsGap,
-  };
+    _source: "fallback"
+  };  
 }
 
 function generateFallbackResume(personalInfo: any, sections: any[]): string {
