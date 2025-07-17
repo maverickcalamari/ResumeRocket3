@@ -34,6 +34,7 @@ export default function Dashboard() {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [activeTab, setActiveTab] = useState("upload");
   const { user, isAuthenticated, logout } = useAuth();
+  const queryClient = useQueryClient();
 
   const { data: stats } = useQuery({
     queryKey: ['/api/stats'],
@@ -57,7 +58,12 @@ export default function Dashboard() {
   const handleResumeUploaded = (resume: Resume) => {
     setCurrentResume(resume);
     setActiveTab("analysis");
+  
+    // ✅ Step 3: Refresh recent resumes + stats
+    queryClient.invalidateQueries(['/api/resumes']);
+    queryClient.invalidateQueries(['/api/stats']);
   };
+  
 
   const handlePremiumClick = () => setShowPremiumModal(true);
   const handleAuthClick = () => setShowAuthModal(true);

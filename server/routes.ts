@@ -7,6 +7,7 @@ import { authenticateToken, optionalAuth, requireAdmin, hashPassword, comparePas
 import multer from "multer";
 import { z } from "zod";
 import { uploadToS3 } from "./s3";
+import { extractTextFromPdf } from './utils/pdfParser';
 
 // Use MongoDB storage
 const storage = new MongoStorage();
@@ -156,7 +157,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Resume routes
-  app.post('/api/resumes/upload', optionalAuth, upload.single('resume'), async (req: AuthRequest, res) => {
+  app.post('/api/resumes/upload', authenticateToken, upload.single('resume'), async (req, res) => {
     try {
       if (!req.file) {
         return res.status(400).json({ message: 'No file uploaded' });
@@ -188,7 +189,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const fileUrl = await uploadToS3(buffer, req.file.originalname, req.file.mimetype);          
 
 // Extract resume text from buffer (basic fallback until PDF/DOCX parser is added)
-const originalContent = req.file.buffer.toString('utf-8');
+const originalContent = await extractTextFromPdf(buffer); // instead of .toString('utf-8')
 
       
       // Analyze resume with AI
