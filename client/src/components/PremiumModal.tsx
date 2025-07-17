@@ -20,21 +20,20 @@ export default function PremiumModal({ isOpen, onClose }: PremiumModalProps) {
 
   useEffect(() => {
     if (!isOpen || typeof window === "undefined") return;
-
+  
     const renderPayPal = () => {
       if (window.paypal && containerRef.current) {
-        try {
-          containerRef.current.innerHTML = ""; // Clear existing buttons
-          window.paypal.HostedButtons({
-            hostedButtonId: "NCAWHR9E5S5U2",
-          }).render(containerRef.current);
-        } catch (err) {
-          console.error("PayPal render failed:", err);
-        }
+        containerRef.current.innerHTML = ""; // Clear existing buttons
+        window.paypal.HostedButtons({
+          hostedButtonId: "NCAWHR9E5S5U2",
+        }).render(containerRef.current);
       }
     };
-
-    if (!window.paypal) {
+  
+    const hasPayPal = typeof window !== "undefined" && window.paypal;
+    const shouldInjectScript = !hasPayPal && !scriptRef.current;
+  
+    if (shouldInjectScript) {
       const script = document.createElement("script");
       script.src =
         "https://www.paypal.com/sdk/js?client-id=BAAP2WHNZkL82bsMvM_5LuvOVvdVdoUELK20DBrEoUrViTiN41uiYT881kg43nhSN50wsayh-FpPmUDl7A&components=hosted-buttons&enable-funding=venmo&currency=USD";
@@ -45,15 +44,14 @@ export default function PremiumModal({ isOpen, onClose }: PremiumModalProps) {
     } else {
       renderPayPal();
     }
-
+  
     return () => {
-      // Clean up PayPal script (optional, prevents clutter)
-      if (scriptRef.current) {
-        scriptRef.current.remove();
-        scriptRef.current = null;
-      }
+      // Only remove script if you're sure you won’t need it again
+      // Otherwise, skip this to keep it cached for repeated use
+      // scriptRef.current?.remove();
+      // scriptRef.current = null;
     };
-  }, [isOpen]);
+  }, [isOpen]);  
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
