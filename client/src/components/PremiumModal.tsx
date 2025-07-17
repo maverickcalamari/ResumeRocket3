@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -11,32 +11,46 @@ import {
 interface PremiumModalProps {
   isOpen: boolean;
   onClose: (open: boolean) => void;
+  hostedButtonId: string;
+  price: number;
 }
 
-export default function PremiumModal({ isOpen, onClose }: PremiumModalProps) {
-  const price = 49.99;
+export default function PremiumModal({
+  isOpen,
+  onClose,
+  hostedButtonId,
+  price = 49.99, // ✅ fallback value
+}: PremiumModalProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const scriptRef = useRef<HTMLScriptElement | null>(null);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (!isOpen || typeof window === "undefined") return;
-  
+
     const renderPayPal = () => {
       if (window.paypal && containerRef.current) {
-        containerRef.current.innerHTML = ""; // Clear existing buttons
-        window.paypal.HostedButtons({
-          hostedButtonId: "NCAWHR9E5S5U2",
-        }).render(containerRef.current);
+        containerRef.current.innerHTML = ""; // Clear old buttons
+        setLoading(false);
+
+        try {
+          window.paypal.HostedButtons({
+            hostedButtonId,
+          }).render(containerRef.current);
+        } catch (err) {
+          console.error("PayPal render failed:", err);
+        }
       }
     };
-  
-    const hasPayPal = typeof window !== "undefined" && window.paypal;
-    const shouldInjectScript = !hasPayPal && !scriptRef.current;
-  
-    if (shouldInjectScript) {
+
+    const alreadyLoaded = typeof window !== "undefined" && window.paypal;
+    const needsScript = !alreadyLoaded && !scriptRef.current;
+
+    if (needsScript) {
+      setLoading(true);
       const script = document.createElement("script");
       script.src =
-        "https://www.paypal.com/sdk/js?client-id=BAAP2WHNZkL82bsMvM_5LuvOVvdVdoUELK20DBrEoUrViTiN41uiYT881kg43nhSN50wsayh-FpPmUDl7A&components=hosted-buttons&enable-funding=venmo&currency=USD";
+        "https://www.paypal.com/ncp/payment/NCAWHR9E5S5U2";
       script.async = true;
       script.onload = renderPayPal;
       document.body.appendChild(script);
@@ -44,14 +58,13 @@ export default function PremiumModal({ isOpen, onClose }: PremiumModalProps) {
     } else {
       renderPayPal();
     }
-  
+
     return () => {
-      // Only remove script if you're sure you won’t need it again
-      // Otherwise, skip this to keep it cached for repeated use
+      // Optional cleanup
       // scriptRef.current?.remove();
       // scriptRef.current = null;
     };
-  }, [isOpen]);  
+  }, [isOpen, hostedButtonId]);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -62,19 +75,21 @@ export default function PremiumModal({ isOpen, onClose }: PremiumModalProps) {
         <DialogHeader>
           <DialogTitle className="text-center">
             <span className="text-2xl font-bold bg-gradient-to-r from-yellow-600 to-orange-600 bg-clip-text text-transparent">
-              Purchase Access
+              Unlock Premium Access
             </span>
           </DialogTitle>
         </DialogHeader>
 
         <div id="premium-modal-description" className="sr-only">
-          One-time payment for premium resume access via PayPal Hosted Buttons.
+          One-time payment for full resume platform access.
         </div>
 
         <div className="space-y-6 text-center">
-          <div className="text-4xl font-bold text-gray-900 mb-2">${price}</div>
+          <div className="text-4xl font-bold text-gray-900 mb-2">
+            ${price.toFixed(2)}
+          </div>
           <div className="mb-4 text-gray-600">
-            One-time payment for full access
+            One-time secure PayPal checkout for lifetime access.
           </div>
           <div className="flex justify-center">
             <div
@@ -88,6 +103,10 @@ export default function PremiumModal({ isOpen, onClose }: PremiumModalProps) {
               }}
             />
           </div>
+
+          {loading && (
+            <p className="text-sm text-gray-400 mt-2">Loading PayPal...</p>
+          )}
         </div>
       </DialogContent>
     </Dialog>
