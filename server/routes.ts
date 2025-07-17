@@ -7,7 +7,7 @@ import { authenticateToken, optionalAuth, requireAdmin, hashPassword, comparePas
 import multer from "multer";
 import { z } from "zod";
 import { uploadToS3 } from "./s3";
-import { extractTextFromPdf } from './utils/pdfParser';
+import { extractTextFromPdf } from './pdfParser';
 
 // Use MongoDB storage
 const storage = new MongoStorage();
