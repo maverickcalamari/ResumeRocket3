@@ -381,12 +381,15 @@ const originalContent = req.file.buffer.toString('utf-8');
   app.get('/api/resumes', authenticateToken, async (req: AuthRequest, res) => {
     try {
       const resumes = await storage.getResumesByUser(req.user!.id);
+
+      console.log("📄 Resumes for user:", req.user!.id, resumes);
+
       res.json(resumes);
     } catch (error) {
       console.error('Get resumes error:', error);
       res.status(500).json({ message: 'Failed to get resumes' });
     }
-  });
+  });  
 
   // Get user stats
   app.get('/api/stats', optionalAuth, async (req: AuthRequest, res) => {
