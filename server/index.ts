@@ -41,42 +41,46 @@ app.use((req, res, next) => {
 });
 
 (async () => {
-  // Test MongoDB connection
-  const mongoConnected = await testMongoConnection();
-  if (!mongoConnected) {
-    log("⚠️  MongoDB connection failed, using fallback storage");
+  log("🟡 [bootstrap] Starting server...");
+
+  try {
+    // 🔍 MongoDB connection
+    log("⏳ [mongo] Connecting...");
+    const mongoConnected = await testMongoConnection();
+    log(`🧪 [mongo] Connected: ${mongoConnected}`);
+
+    // 🔍 Register routes
+    log("⏳ [routes] Registering routes...");
+    const server = await registerRoutes(app);
+    log("📦 [routes] Routes registered");
+
+    // 🔍 Error middleware
+    app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
+      const status = err.status || err.statusCode || 500;
+      const message = err.message || "Internal Server Error";
+      log(`❌ [error] ${message}`, "express");
+      res.status(status).json({ message });
+    });
+
+    // 🔍 Setup frontend
+    if (app.get("env") === "development") {
+      log("⚙️ [vite] Setting up Vite dev middleware...");
+      await setupVite(app, server);
+    } else {
+      log("📁 [static] Serving static files from dist...");
+      serveStatic(app);
+    }
+
+    // 🔍 Listen
+    const port = 5000;
+    server.listen({ port, host: "0.0.0.0", reusePort: true }, () => {
+      log(`🚀 Server running on port ${port}`);
+      log(`📊 Dashboard: http://localhost:${port}`);
+      log(`🔧 API: http://localhost:${port}/api`);
+    });
+  } catch (err) {
+    log(`💥 [fatal] Unhandled error: ${(err as Error).message}`, "fatal");
+    console.error(err);
+    process.exit(1);
   }
-
-  const server = await registerRoutes(app);
-
-  app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
-    const status = err.status || err.statusCode || 500;
-    const message = err.message || "Internal Server Error";
-
-    res.status(status).json({ message });
-    throw err;
-  });
-
-  // importantly only setup vite in development and after
-  // setting up all the other routes so the catch-all route
-  // doesn't interfere with the other routes
-  if (app.get("env") === "development") {
-    await setupVite(app, server);
-  } else {
-    serveStatic(app);
-  }
-
-  // ALWAYS serve the app on port 5000
-  // this serves both the API and the client.
-  // It is the only port that is not firewalled.
-  const port = 5000;
-  server.listen({
-    port,
-    host: "0.0.0.0",
-    reusePort: true,
-  }, () => {
-    log(`🚀 Server running on port ${port}`);
-    log(`📊 Dashboard: http://localhost:${port}`);
-    log(`🔧 API: http://localhost:${port}/api`);
-  });
 })();

@@ -6,6 +6,7 @@ import { insertResumeSchema, loginSchema, registerSchema } from "@shared/schema"
 import { authenticateToken, optionalAuth, requireAdmin, hashPassword, comparePassword, generateToken, type AuthRequest } from "./auth";
 import multer from "multer";
 import { z } from "zod";
+import { uploadToS3 } from "./s3";
 
 // Use MongoDB storage
 const storage = new MongoStorage();
@@ -166,16 +167,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: 'Industry is required' });
       }
 
-      // Extract text content from file
-      let originalContent: string;
-      
-      if (req.file.mimetype === 'text/plain') {
-        originalContent = req.file.buffer.toString('utf-8');
-      } else {
-        // For PDF and DOC files, we'll use the buffer as text for now
-        // In production, you'd want to use proper PDF/DOC parsing libraries
-        originalContent = req.file.buffer.toString('utf-8');
-      }
+      // Upload the file to S3
+const fileUrl = await uploadToS3(req.file.buffer, req.file.originalname, req.file.mimetype);
+
+// Extract resume text from buffer (basic fallback until PDF/DOCX parser is added)
+const originalContent = req.file.buffer.toString('utf-8');
+
       
       // Analyze resume with AI
       const analysis = await analyzeResume(originalContent, industry);
@@ -184,6 +181,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const resumeData = {
         userId: req.user?.id || null,
         filename: req.file.originalname,
+        fileUrl, // ✅ <--- ADD THIS
         originalContent,
         industry,
         atsScore: analysis.score,
@@ -191,6 +189,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         suggestions: analysis.suggestions,
         skillsGap: analysis.skillsGap,
       };
+      
 
       const resume = await storage.createResume(resumeData);
       

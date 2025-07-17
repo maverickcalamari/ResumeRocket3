@@ -9,13 +9,12 @@ import ResumeBuilder from "@/components/ResumeBuilder";
 import PremiumModal from "@/components/PremiumModal";
 import AuthModal from "@/components/AuthModal";
 import AdminDashboard from "@/components/AdminDashboard";
-import DashboardSidebar from "@/components/DashboardSidebar";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FileText, Upload, Wand2, Crown, User, LogOut, Settings } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useAuth, apiRequest } from "@/lib/auth";
-import pierlineLogoPath from "@/Logo.png";
+
 
 interface Resume {
   id: number;
@@ -76,7 +75,6 @@ export default function Dashboard() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16 sm:h-20">
             <div className="flex items-center space-x-4">
-              <img src={pierlineLogoPath} alt="Pierline Consultation" className="h-10 w-10 sm:h-16 sm:w-16 object-contain" />
               <div className="flex flex-col">
                 <span className="text-lg sm:text-2xl font-bold text-white">Pierline Consultation</span>
                 <span className="text-xs sm:text-sm text-white/80 font-medium">Resume Optimization Services</span>

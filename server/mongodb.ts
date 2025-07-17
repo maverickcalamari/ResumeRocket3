@@ -23,16 +23,24 @@ class MongoDB {
 
   async connect(): Promise<void> {
     try {
-      await this.client.connect();
+      const timeout = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("MongoDB connection timed out")), 7000)
+      );
+  
+      await Promise.race([
+        this.client.connect(),
+        timeout
+      ]);
+  
       this.db = this.client.db(DB_NAME);
       this.isConnected = true;
-      console.log('✅ MongoDB connected successfully');
+      console.log("✅ MongoDB connected successfully");
     } catch (error) {
-      console.error('❌ MongoDB connection failed:', error);
+      console.error("❌ MongoDB connection failed:", error);
       throw error;
     }
   }
-
+  
   async disconnect(): Promise<void> {
     if (this.isConnected) {
       await this.client.close();

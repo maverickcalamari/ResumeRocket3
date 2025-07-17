@@ -18,7 +18,7 @@ interface ResumeEditorProps {
 }
 
 export default function ResumeEditor({ resume, onUpdate }: ResumeEditorProps) {
-  const [content, setContent] = useState(resume.originalContent);
+  const [content, setContent] = useState(resume?.originalContent ?? "");
   const [isPreview, setIsPreview] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();

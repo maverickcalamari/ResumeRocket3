@@ -7,9 +7,10 @@ export const users = pgTable("users", {
   username: text("username").notNull().unique(),
   email: text("email").notNull().unique(),
   password: text("password").notNull(),
-  role: text("role").notNull().default("user"), // 'user' | 'admin'
+  role: text("role").notNull().default("user"),
   firstName: text("first_name"),
   lastName: text("last_name"),
+  phoneNumber: text("phone_number"),
   isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").defaultNow(),
   lastLoginAt: timestamp("last_login_at"),
@@ -19,6 +20,7 @@ export const resumes = pgTable("resumes", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").references(() => users.id),
   filename: text("filename").notNull(),
+  fileUrl: text("file_url"),
   originalContent: text("original_content").notNull(),
   optimizedContent: text("optimized_content"),
   industry: text("industry").notNull(),
@@ -211,6 +213,10 @@ export const registerSchema = z.object({
   password: z.string().min(6, "Password must be at least 6 characters"),
   firstName: z.string().optional(),
   lastName: z.string().optional(),
+  phoneNumber: z
+    .string()
+    .regex(/^\+?[0-9\s\-().]{7,20}$/, "Invalid phone number format")
+    .optional(),
 });
 
 // Type exports
