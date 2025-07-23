@@ -12,14 +12,14 @@ interface PremiumModalProps {
   isOpen: boolean;
   onClose: (open: boolean) => void;
   hostedButtonId: string;
-  price: number;
+  price?: number;
 }
 
 export default function PremiumModal({
   isOpen,
   onClose,
   hostedButtonId,
-  price = 49.99, // ✅ fallback value
+  price = 49.99,
 }: PremiumModalProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const scriptRef = useRef<HTMLScriptElement | null>(null);
@@ -30,7 +30,7 @@ export default function PremiumModal({
 
     const renderPayPal = () => {
       if (window.paypal && containerRef.current) {
-        containerRef.current.innerHTML = ""; // Clear old buttons
+        containerRef.current.innerHTML = "";
         setLoading(false);
 
         try {
@@ -50,7 +50,7 @@ export default function PremiumModal({
       setLoading(true);
       const script = document.createElement("script");
       script.src =
-        "https://www.paypal.com/ncp/payment/NCAWHR9E5S5U2";
+        "https://www.paypal.com/sdk/js?components=hosted-buttons";
       script.async = true;
       script.onload = renderPayPal;
       document.body.appendChild(script);
@@ -61,8 +61,6 @@ export default function PremiumModal({
 
     return () => {
       // Optional cleanup
-      // scriptRef.current?.remove();
-      // scriptRef.current = null;
     };
   }, [isOpen, hostedButtonId]);
 
